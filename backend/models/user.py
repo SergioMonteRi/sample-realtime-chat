@@ -18,7 +18,7 @@ class User(Base, UserMixin):
         default=uuid7
     )
 
-    username: Mapped[str] = mapped_column(
+    email: Mapped[str] = mapped_column(
         String(80), 
         nullable=False, 
         unique=True
