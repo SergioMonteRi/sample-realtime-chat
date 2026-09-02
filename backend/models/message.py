@@ -1,16 +1,16 @@
 from uuid import UUID, uuid7
 from datetime import datetime, timezone
 
-from sqlalchemy import String
-from flask_login import UserMixin
+from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from extensions import Base
 from custom_types.uuid import UUIDType
 from custom_types.utc_datetime import UTCDateTime
 
-class User(Base, UserMixin):
-    __tablename__ = "user"
+
+class Message(Base):
+    __tablename__ = "message"
 
     id: Mapped[UUID] = mapped_column(
         UUIDType(),
@@ -18,14 +18,20 @@ class User(Base, UserMixin):
         default=uuid7
     )
 
-    username: Mapped[str] = mapped_column(
-        String(80), 
-        nullable=False, 
-        unique=True
+    chat_id: Mapped[UUID] = mapped_column(
+        UUIDType(),
+        ForeignKey("chat.id"),
+        nullable=False
     )
 
-    password: Mapped[str] = mapped_column(
-        String(255), 
+    sender_id: Mapped[UUID] = mapped_column(
+        UUIDType(),
+        ForeignKey("user.id"),
+        nullable=False
+    )
+
+    content: Mapped[str] = mapped_column(
+        Text,
         nullable=False
     )
 
@@ -35,10 +41,10 @@ class User(Base, UserMixin):
         default=lambda: datetime.now(timezone.utc)
     )
 
-    chat_participations: Mapped[list["ChatParticipant"]] = relationship(
-        back_populates="user"
+    chat: Mapped["Chat"] = relationship(
+        back_populates="messages"
     )
 
-    messages: Mapped[list["Message"]] = relationship(
-        back_populates="sender"
+    sender: Mapped["User"] = relationship(
+        back_populates="messages"
     )
