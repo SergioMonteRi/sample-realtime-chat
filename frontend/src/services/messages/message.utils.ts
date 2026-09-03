@@ -1,5 +1,6 @@
-import type { ChatMessage, Message } from './message.types'
+import { v4 as uuidv4 } from 'uuid'
 
+import type { ChatMessage, Message } from './message.types'
 /**
  * Remetente das mensagens ainda nao confirmadas.
  *
@@ -40,7 +41,7 @@ export const createOptimisticMessage = ({
   chatId,
   content,
 }: CreateOptimisticMessageParams): ChatMessage => ({
-  id: `${OPTIMISTIC_ID_PREFIX}${crypto.randomUUID()}`,
+  id: `${OPTIMISTIC_ID_PREFIX}${uuidv4()}`,
   chatId,
   senderId: OUTGOING_SENDER_ID,
   content,
