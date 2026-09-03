@@ -1,6 +1,6 @@
 import { useChatWithUserQuery } from '@/services/chats'
 import type { ChatMessage } from '@/services/messages'
-import { useMessagesQuery } from '@/services/messages'
+import { useChatRealtime, useMessagesQuery } from '@/services/messages'
 
 interface UseConversationPanelParams {
   contactId: string
@@ -27,6 +27,8 @@ export const useConversationPanel = ({
   const chatId = chatQuery.data?.chatId
 
   const messagesQuery = useMessagesQuery({ chatId })
+
+  useChatRealtime({ chatId })
 
   const handleRefresh = () => {
     void (chatQuery.isError ? chatQuery.refetch() : messagesQuery.refetch())

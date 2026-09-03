@@ -9,6 +9,7 @@ from services.message_service import MessageService
 from schemas.chat.create_chat_request import CreateChatRequest
 from schemas.message.message_schemas import CreateMessageRequest, MessageResponse, GetMessagesResponse
 
+from extensions import socketio
 
 chat = Blueprint("chat", __name__)
 
@@ -63,6 +64,12 @@ def create_message(chat_id: UUID):
         }), 400
 
     response = MessageResponse.model_validate(message)
+
+    socketio.emit(
+        "new-message",
+        MessageResponse.model_validate(message).model_dump(mode="json"),
+        to=f"chat:{chat_id}"
+    )
 
     return jsonify({
         "message": response.model_dump(mode="json")

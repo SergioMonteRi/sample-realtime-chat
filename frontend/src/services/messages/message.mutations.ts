@@ -23,7 +23,6 @@ export const messageMutations = {
         messageService.createMessage(chatId, payload),
 
       onMutate: async (payload) => {
-        /* Um refetch em voo sobrescreveria o balao otimista. */
         await queryClient.cancelQueries({ queryKey })
 
         const previousMessages = queryClient.getQueryData(queryKey)

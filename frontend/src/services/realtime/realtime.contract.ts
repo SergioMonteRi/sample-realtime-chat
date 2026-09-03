@@ -1,3 +1,5 @@
+import type { ChatMessage } from '../messages'
+
 /**
  * Contrato do canal em tempo real do backend (`backend/sockets/chat_socket.py`).
  *
@@ -6,16 +8,14 @@
  * espalhados pelo codigo.
  */
 export const CHAT_REALTIME_EVENTS = {
-  /** Ja existe no backend: entra na sala `chat:<id>` com `{ chat_id }`. */
   joinChat: 'join-chat',
-  /** Previsto para a fase de tempo real; o backend ainda nao emite. */
   newMessage: 'new-message',
 } as const
 
 export type ChatRealtimeEvent =
   (typeof CHAT_REALTIME_EVENTS)[keyof typeof CHAT_REALTIME_EVENTS]
 
-export type RealtimeListener = (payload: unknown) => void
+export type RealtimeListener = (message: ChatMessage) => void
 
 /** Funcao devolvida por `on*`: chamar remove o listener. */
 export type Unsubscribe = () => void

@@ -75,4 +75,6 @@ class ChatService():
             )
         )
 
-        return db.session.scalar(stmt) is not None
+        chat = db.session.scalar(stmt) is not None
+
+        return chat is not None
