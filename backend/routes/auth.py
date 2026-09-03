@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from extensions import db, login_manager
 from models.user import User
+from services.auth_service import AuthService
 
 from schemas.auth.create_user_request import CreateUserRequest
 from schemas.auth.login_request import LoginRequest
@@ -24,13 +25,11 @@ def load_user(user_id: str):
 
     return user
 
-
 @login_manager.unauthorized_handler
 def unauthorized():
     return jsonify({
         "error": "Authentication required"
     }), 401
-
 
 @auth.route("/auth/register", methods=["POST"])
 def create_user():
@@ -43,24 +42,19 @@ def create_user():
             "details": e.errors()
         }), 400
 
-    user = User(
+    AuthService.create_user(
         email=create_user_data.email,
-        password=generate_password_hash(create_user_data.password)
+        password=create_user_data.password
     )
-
-    db.session.add(user)
-    db.session.commit()
-
+    
     return jsonify({
             "message": "User created with success"
     }), 201
-
 
 @auth.route("/auth/login", methods=["POST"])
 def login():
     try:
         data = request.json
-
         login_data = LoginRequest.model_validate(data)
     except ValidationError as e:
         return jsonify({
@@ -68,18 +62,14 @@ def login():
             "details": e.errors()
         }), 400
 
-    email = login_data.email
-    password = login_data.password
-
-    stmt = select(User).where(
-        User.email == email
+    user = AuthService.authenticate(
+        email=login_data.email,
+        password=login_data.password
     )
 
-    user = db.session.scalar(stmt)
-
-    if user is None or not check_password_hash(user.password, password):
-         return jsonify({
-            "error": "Invalid username or password"
+    if user is None:
+        return jsonify({
+            "error": "Invalid email or password"
         }), 401
 
     login_user(user)
@@ -87,7 +77,6 @@ def login():
     return jsonify({
         "message": "Successful login"
     }), 200
-
 
 @auth.route("/auth/logout", methods=["POST"])
 @login_required

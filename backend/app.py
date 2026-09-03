@@ -5,7 +5,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_migrate import Migrate
 
-from extensions import db, socketio
+from extensions import db, socketio, login_manager
 
 load_dotenv()
 
@@ -23,7 +23,8 @@ def create_app():
     )
 
     db.init_app(app)
-    
+    login_manager.init_app(app)
+
     Migrate(app=app, db=db)
 
     socketio.init_app(
@@ -35,6 +36,12 @@ def create_app():
     from models.chat_participant import ChatParticipant
     from models.message import Message
     from models.user import User
+
+    from routes.auth import auth
+    from routes.user import user
+
+    app.register_blueprint(auth)
+    app.register_blueprint(user)
 
     return app
 
