@@ -7,7 +7,8 @@ from services.chat_service import ChatService
 from services.message_service import MessageService
 
 from schemas.chat.create_chat_request import CreateChatRequest
-from schemas.message.message_schemas import CreateMessageRequest, MessageResponse
+from schemas.message.message_schemas import CreateMessageRequest, MessageResponse, GetMessagesResponse
+
 
 chat = Blueprint("chat", __name__)
 
@@ -17,7 +18,7 @@ def create_chat():
     try:
         create_chat_data = CreateChatRequest.model_validate(request.json)
 
-        current_user_id = current_user._get_current_object().id
+        current_user_id = current_user.id
         receiver_user_id =  create_chat_data.receiver_id
         
         chat = ChatService.create_chat(
@@ -44,11 +45,10 @@ def create_chat():
 def create_message(chat_id: UUID):
     try:
         create_message_data = CreateMessageRequest.model_validate(request.json)
-        current_user_id = current_user.id
 
         message = MessageService.create_message(
             chat_id=chat_id,
-            sender_id=current_user_id,
+            sender_id=current_user.id,
             content=create_message_data.content
         )
     except ValidationError as e:
@@ -67,6 +67,29 @@ def create_message(chat_id: UUID):
     return jsonify({
         "message": response.model_dump(mode="json")
     }), 201
+
+@chat.route("/chat/<uuid:chat_id>/messages", methods=["GET"])
+@login_required
+def get_messages(chat_id: UUID):
+    try:
+        messages = MessageService.get_messages(
+            chat_id=chat_id,
+            current_user_id=current_user.id
+        )
+    except ValueError as e:
+            return jsonify({
+                "error": str(e)
+            }), 400
+
+    response = GetMessagesResponse(
+        messages=[
+            MessageResponse.model_validate(message) 
+            for message in messages
+        ]
+    )
+
+    return jsonify(response.model_dump(mode="json"))
+
 
 
 

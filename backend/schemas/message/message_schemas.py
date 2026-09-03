@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, ConfigDict
 class CreateMessageRequest(BaseModel):
     content: str = Field(min_length=1)
 
-
 class MessageResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -15,4 +14,7 @@ class MessageResponse(BaseModel):
     sender_id: UUID
     content: str
     created_at: datetime
+
+class GetMessagesResponse(BaseModel):
+    messages: list[MessageResponse]
     
