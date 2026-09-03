@@ -1,0 +1,21 @@
+{
+  "brand": {
+    "name": "Sala",
+    "tagline": "Direct messages"
+  },
+  "actions": {
+    "retry": "Try again",
+    "refresh": "Refresh",
+    "signOut": "Sign out",
+    "back": "Back"
+  },
+  "language": {
+    "label": "Language",
+    "ptBR": "PT",
+    "enUS": "EN"
+  },
+  "loading": "Loading",
+  "footer": {
+    "note": "Study environment · messages live in the backend's local database."
+  }
+}

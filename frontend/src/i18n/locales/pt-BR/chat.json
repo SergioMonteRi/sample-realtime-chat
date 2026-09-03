@@ -1,0 +1,64 @@
+{
+  "sidebar": {
+    "title": "Contatos",
+    "searchLabel": "Buscar contato",
+    "searchPlaceholder": "Buscar por e-mail",
+    "count_one": "{{count}} pessoa",
+    "count_other": "{{count}} pessoas",
+    "loading": "Carregando contatos",
+    "empty": {
+      "title": "Ninguém por aqui ainda",
+      "description": "Assim que outra pessoa criar uma conta, ela aparece nesta lista."
+    },
+    "noResults": {
+      "title": "Nenhum contato encontrado",
+      "description": "Tente outro trecho do e-mail."
+    },
+    "error": {
+      "title": "Não deu para carregar os contatos",
+      "description": "A lista vem do backend. Verifique se ele está no ar e tente de novo."
+    }
+  },
+  "conversation": {
+    "openLabel": "Abrir conversa com {{name}}",
+    "loading": "Carregando mensagens",
+    "refreshLabel": "Buscar mensagens novas",
+    "realtimeNotice": "Mensagens novas chegam ao atualizar — o tempo real entra em uma etapa seguinte.",
+    "you": "Você",
+    "day": {
+      "today": "Hoje",
+      "yesterday": "Ontem"
+    },
+    "sending": "Enviando",
+    "sentAt": "Enviada às {{time}}",
+    "empty": {
+      "title": "Escolha uma conversa",
+      "description": "Selecione um contato na coluna ao lado para abrir o histórico."
+    },
+    "start": {
+      "title": "Diga o primeiro olá",
+      "description": "Nenhuma mensagem trocada com {{name}} até agora."
+    },
+    "error": {
+      "title": "Não deu para carregar a conversa",
+      "description": "O histórico vem do backend. Tente novamente em instantes."
+    }
+  },
+  "composer": {
+    "label": "Mensagem",
+    "placeholder": "Escreva uma mensagem",
+    "send": "Enviar",
+    "sending": "Enviando",
+    "hint": "Enter envia · Shift + Enter quebra a linha"
+  },
+  "validation": {
+    "messageRequired": "Escreva algo antes de enviar.",
+    "messageMax": "A mensagem passa de {{count}} caracteres."
+  },
+  "errors": {
+    "contactsFailed": "Não foi possível carregar os contatos.",
+    "messagesFailed": "Não foi possível carregar as mensagens.",
+    "openConversationFailed": "Não foi possível abrir a conversa.",
+    "sendMessageFailed": "Não foi possível enviar a mensagem."
+  }
+}

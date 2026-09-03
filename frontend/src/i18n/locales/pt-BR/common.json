@@ -1,0 +1,21 @@
+{
+  "brand": {
+    "name": "Sala",
+    "tagline": "Mensagens diretas"
+  },
+  "actions": {
+    "retry": "Tentar novamente",
+    "refresh": "Atualizar",
+    "signOut": "Sair",
+    "back": "Voltar"
+  },
+  "language": {
+    "label": "Idioma",
+    "ptBR": "PT",
+    "enUS": "EN"
+  },
+  "loading": "Carregando",
+  "footer": {
+    "note": "Ambiente de estudo · as mensagens ficam no banco local do backend."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "boundary": {
+    "badge": "Erro",
+    "title": "Algo saiu do trilho",
+    "description": "A tela não conseguiu se montar. Tente de novo — se insistir, recarregue a página."
+  },
+  "notFound": {
+    "badge": "Endereço desconhecido",
+    "title": "Esta página não existe",
+    "description": "O link pode estar quebrado ou a conversa pode ter outro endereço.",
+    "action": "Ir para as conversas"
+  }
+}

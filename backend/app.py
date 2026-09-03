@@ -19,7 +19,8 @@ def create_app():
 
     CORS(
         app,
-        origins=["http://localhost:5173"]
+        origins=["http://localhost:5173"],
+        supports_credentials=True
     )
 
     db.init_app(app)
@@ -52,4 +53,4 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, port=5001)

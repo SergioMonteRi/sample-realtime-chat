@@ -1,0 +1,64 @@
+{
+  "sidebar": {
+    "title": "Contacts",
+    "searchLabel": "Search contact",
+    "searchPlaceholder": "Search by e-mail",
+    "count_one": "{{count}} person",
+    "count_other": "{{count}} people",
+    "loading": "Loading contacts",
+    "empty": {
+      "title": "Nobody here yet",
+      "description": "As soon as someone else creates an account, they show up in this list."
+    },
+    "noResults": {
+      "title": "No contact found",
+      "description": "Try another part of the e-mail."
+    },
+    "error": {
+      "title": "Could not load the contacts",
+      "description": "The list comes from the backend. Check whether it is running and try again."
+    }
+  },
+  "conversation": {
+    "openLabel": "Open conversation with {{name}}",
+    "loading": "Loading messages",
+    "refreshLabel": "Fetch new messages",
+    "realtimeNotice": "New messages arrive on refresh — real time comes in a later step.",
+    "you": "You",
+    "day": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "sending": "Sending",
+    "sentAt": "Sent at {{time}}",
+    "empty": {
+      "title": "Pick a conversation",
+      "description": "Select a contact in the column beside to open the history."
+    },
+    "start": {
+      "title": "Say the first hello",
+      "description": "No messages exchanged with {{name}} so far."
+    },
+    "error": {
+      "title": "Could not load the conversation",
+      "description": "The history comes from the backend. Try again in a moment."
+    }
+  },
+  "composer": {
+    "label": "Message",
+    "placeholder": "Write a message",
+    "send": "Send",
+    "sending": "Sending",
+    "hint": "Enter sends · Shift + Enter breaks the line"
+  },
+  "validation": {
+    "messageRequired": "Write something before sending.",
+    "messageMax": "The message goes past {{count}} characters."
+  },
+  "errors": {
+    "contactsFailed": "Could not load the contacts.",
+    "messagesFailed": "Could not load the messages.",
+    "openConversationFailed": "Could not open the conversation.",
+    "sendMessageFailed": "Could not send the message."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "boundary": {
+    "badge": "Error",
+    "title": "Something went off the rails",
+    "description": "The screen could not render. Try again — if it persists, reload the page."
+  },
+  "notFound": {
+    "badge": "Unknown address",
+    "title": "This page does not exist",
+    "description": "The link may be broken, or the conversation may live at another address.",
+    "action": "Go to the conversations"
+  }
+}
