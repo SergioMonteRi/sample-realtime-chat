@@ -84,9 +84,9 @@ Integrar é: instalar `socket.io-client`, implementar o gateway, chamá-lo no
 bootstrap e ligar o evento `new-message` a `applyIncomingMessage`. Nenhum
 componente muda, porque nenhum componente fala com o socket.
 
-Enquanto isso, o histórico é revalidado ao voltar o foco para a janela e pelo
-botão de atualizar do cabeçalho da conversa. Não há polling em segundo plano —
-esse é exatamente o buraco que o canal preenche.
+Enquanto isso, nada revalida sozinho: não há polling, refetch no foco da janela
+nem na reconexão. A mensagem nova só aparece pelo botão de atualizar no
+cabeçalho da conversa — esse é exatamente o buraco que o canal preenche.
 
 ---
 

@@ -16,9 +16,10 @@ export const APP = {
   chatResolutionStaleTimeMs: Infinity,
 
   /**
-   * Historico so e revalidado sob demanda (foco da janela ou botao de
-   * atualizar). Mensagens que chegam enquanto a tela esta aberta sao o
-   * trabalho do canal em tempo real — ver `services/realtime`.
+   * O historico em cache nunca envelhece sozinho: enquanto nao ha canal em
+   * tempo real, so o botao de atualizar (um `refetch`, que ignora este
+   * valor) traz mensagem nova. A carga inicial continua acontecendo quando
+   * a conversa ainda nao esta em cache. Ver `services/realtime`.
    */
-  messagesStaleTimeMs: 10_000,
+  messagesStaleTimeMs: Infinity,
 } as const

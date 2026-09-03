@@ -13,10 +13,13 @@ export const messageKeys = {
 
 export const messageQueries = {
   /**
-   * Historico da conversa. Sem canal em tempo real, a revalidacao acontece
-   * ao voltar o foco para a janela ou pelo botao de atualizar do cabecalho
-   * — nao ha polling em segundo plano de proposito: e o lugar exato onde o
-   * Socket.IO entra depois.
+   * Historico da conversa.
+   *
+   * Sem canal em tempo real, nada revalida sozinho: nem polling, nem foco da
+   * janela, nem reconexao de rede. A mensagem nova so aparece quando a pessoa
+   * pede, pelo botao de atualizar do cabecalho, ou ao abrir a conversa. Com
+   * duas abas lado a lado, o refetch no foco dava a ilusao de tempo real e
+   * escondia justamente o buraco que o Socket.IO vem preencher.
    */
   byChat: (chatId: string) =>
     queryOptions({
@@ -27,6 +30,8 @@ export const messageQueries = {
         return messages.map(toSentMessage)
       },
       staleTime: APP.messagesStaleTimeMs,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       retry: (failureCount, error) =>
         !isUnauthorizedError(error) && failureCount < 2,
       meta: { errorMessageKey: 'chat:errors.messagesFailed' },
