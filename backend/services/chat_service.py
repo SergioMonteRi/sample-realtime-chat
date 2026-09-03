@@ -60,3 +60,19 @@ class ChatService():
         db.session.commit()
 
         return chat
+
+    @staticmethod
+    def ensure_user_is_participant(
+        chat_id: UUID,
+        user_id: UUID,
+    ) -> bool:
+        stmt = (
+            select(Chat)
+            .join(ChatParticipant)
+            .where(
+                Chat.id == chat_id,
+                ChatParticipant.user_id == user_id
+            )
+        )
+
+        return db.session.scalar(stmt) is not None

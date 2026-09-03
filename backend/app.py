@@ -41,6 +41,8 @@ def create_app():
     from routes.user import user
     from routes.chat import chat
 
+    from sockets import chat_socket
+
     app.register_blueprint(auth)
     app.register_blueprint(user)
     app.register_blueprint(chat)
