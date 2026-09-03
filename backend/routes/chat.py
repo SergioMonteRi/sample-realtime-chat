@@ -1,10 +1,13 @@
+from uuid import UUID
 from pydantic import ValidationError
 from flask import jsonify, request, Blueprint
 from flask_login import login_required, current_user
 
-from schemas.chat.create_chat_request import CreateChatRequest
 from services.chat_service import ChatService
+from services.message_service import MessageService
 
+from schemas.chat.create_chat_request import CreateChatRequest
+from schemas.message.message_schemas import CreateMessageRequest, MessageResponse
 
 chat = Blueprint("chat", __name__)
 
@@ -35,6 +38,36 @@ def create_chat():
     return jsonify({
         "chat_id": str(chat.id)
     }), 201
+
+@chat.route("/chat/<uuid:chat_id>/messages", methods=["POST"])
+@login_required
+def create_message(chat_id: UUID):
+    try:
+        create_message_data = CreateMessageRequest.model_validate(request.json)
+        current_user_id = current_user.id
+
+        message = MessageService.create_message(
+            chat_id=chat_id,
+            sender_id=current_user_id,
+            content=create_message_data.content
+        )
+    except ValidationError as e:
+        return jsonify({
+            "error": "Invalid create message data",
+            "details": e.errors()
+        }), 400
+
+    except ValueError as e:
+        return jsonify({
+            "error": str(e)
+        }), 400
+
+    response = MessageResponse.model_validate(message)
+
+    return jsonify({
+        "message": response.model_dump(mode="json")
+    }), 201
+
 
 
     
