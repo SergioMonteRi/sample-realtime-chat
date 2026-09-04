@@ -7,6 +7,8 @@ from models.chat import Chat
 from models.message import Message
 from models.chat_participant import ChatParticipant
 
+from exceptions.chat_exceptions import NotChatParticipantError
+
 class MessageService:
 
     @staticmethod
@@ -28,7 +30,7 @@ class MessageService:
         chat = db.session.scalar(stmt)
 
         if not chat:
-            raise ValueError(
+            raise NotChatParticipantError(
                 "User is not a participant of this chat"
             )
 

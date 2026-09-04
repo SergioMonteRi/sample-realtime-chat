@@ -10,6 +10,7 @@ from schemas.chat.create_chat_request import CreateChatRequest
 from schemas.message.message_schemas import CreateMessageRequest, MessageResponse, GetMessagesResponse
 
 from extensions import socketio
+from exceptions.chat_exceptions import NotChatParticipantError
 
 chat = Blueprint("chat", __name__)
 
@@ -58,10 +59,10 @@ def create_message(chat_id: UUID):
             "details": e.errors()
         }), 400
 
-    except ValueError as e:
+    except NotChatParticipantError as e:
         return jsonify({
             "error": str(e)
-        }), 400
+        }), 403
 
     response = MessageResponse.model_validate(message)
 

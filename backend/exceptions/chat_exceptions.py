@@ -1,0 +1,2 @@
+class NotChatParticipantError(Exception):
+    pass
