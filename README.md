@@ -41,9 +41,9 @@ in the other one — pushed over Socket.IO, not fetched by a timer.
 
 ## Overview
 
-The exercise: build direct messaging between two registered people. Someone signs up, sees
-everyone else as a contact, opens a conversation, and types. The message is stored, echoed
-back to the sender, and pushed to whoever else is watching that conversation.
+The exercise: build direct messaging between two registered people. Someone signs up, opens a
+conversation with anyone who has an account, and types. The message is stored, echoed back to
+the sender, and pushed to whoever else is watching that conversation.
 
 The interesting part is not the CRUD — it is that **the second browser never asked for that
 message.** It arrives on a channel, out of band, and has to land in a cache the screen is
@@ -51,16 +51,30 @@ already rendering from. Getting that write to look exactly like an HTTP response
 cannot tell the two apart — is what the project is about. The optimistic bubble that appears
 before the server answers is the same problem seen from the other side.
 
-The project was built in two phases, and the seam is deliberate: the first commit was
-REST-only, with the channel stubbed behind an interface; the second dropped Socket.IO in
-without touching a single component.
+The project was built in three passes, and the seams are deliberate:
+
+1. **REST only**, with the channel stubbed behind an interface — a null object that connected
+   to nothing.
+2. **Socket.IO dropped in**, without touching a single component: one call at bootstrap swapped
+   the null gateway for the real one.
+3. **The server learned to describe itself** — `GET /me` and `GET /chats`, plus the last message
+   denormalized onto the chat row. That third pass deleted two workarounds the front end had
+   been carrying: inferring its own identity by elimination, and writing a `POST /chat` every
+   time someone merely *looked* at a conversation.
 
 ## Features
 
 - **Session authentication** — register and login with flask-login, password hashed with
   Werkzeug, session kept in an httpOnly cookie the JavaScript never reads.
+- **Conversation list in one request** — `GET /chats` returns each conversation already carrying
+  the other participant and the last message, ordered by activity. The sidebar needs no second
+  call and no cross-referencing.
+- **A chat is created by talking, not by looking** — opening a conversation is a pure read; the
+  row is minted on the first send, so clicking a name never leaves an empty conversation behind.
 - **1:1 conversations** — `POST /chat` is create-or-return: asking twice for the same pair
   gives back the same chat, so the client needs no "does it exist" round trip.
+- **Own identity from the server** — `GET /me` answers who the cookie belongs to, so which side
+  of the conversation a bubble falls on is a comparison, not a guess.
 - **Message history** — chronological, and readable only by a participant of that chat.
 - **Push over WebSocket** — after the row is committed, the server emits `new-message` into
   the `chat:<chat_id>` room, so only the two people in that conversation are woken up.
@@ -69,6 +83,8 @@ without touching a single component.
 - **One door into the cache** — `applyIncomingMessage` is where an unrequested message lands,
   whether it came from the socket or from the `POST` response. The components never learn
   which.
+- **The sidebar reorders without a refetch** — `applyChatActivity` updates the preview, the
+  timestamp and the position of a conversation in the cache, mirroring the server's `ORDER BY`.
 - **Optimistic send** — the bubble appears in the same frame as the click, marked as sending,
   and is replaced by the server's message when it returns; on failure it disappears and the
   text goes back to the field.
@@ -127,30 +143,33 @@ sample-realtime-chat/
 │   ├── custom_types/
 │   │   ├── uuid.py                 # TypeDecorator: UUID <-> String(36)
 │   │   └── utc_datetime.py         # TypeDecorator: aware UTC <-> naive DATETIME
+│   ├── exceptions/
+│   │   └── chat_exceptions.py      # NotChatParticipantError, so the route can answer 403
 │   ├── models/
 │   │   ├── user.py                 # UserMixin, so flask-login can carry it
-│   │   ├── chat.py
+│   │   ├── chat.py                 # + last_message_at / last_message_id
 │   │   ├── chat_participant.py     # the join table, composite primary key
 │   │   └── message.py
 │   ├── schemas/                    # request and response contracts (Pydantic)
 │   │   ├── auth/                   # create_user_request, login_request
-│   │   ├── chat/create_chat_request.py
+│   │   ├── chat/create_chat_request.py   # the request, plus the GET /chats response
 │   │   ├── message/message_schemas.py
-│   │   └── user/get_users_response.py
+│   │   └── user/get_users_response.py    # UserResponse, reused by GET /me
 │   ├── routes/                     # blueprints, one per API domain
 │   │   ├── auth.py                 # register, login, logout, the user_loader
-│   │   ├── user.py                 # GET /users
-│   │   └── chat.py                 # POST /chat and the message endpoints
+│   │   ├── user.py                 # GET /users and GET /me
+│   │   └── chat.py                 # POST /chat, GET /chats and the message endpoints
 │   ├── services/                   # every rule that is not HTTP
 │   │   ├── auth_service.py
 │   │   ├── user_service.py
-│   │   ├── chat_service.py         # create-or-return, participant check
-│   │   └── message_service.py
+│   │   ├── chat_service.py         # create-or-return, participant check, list by activity
+│   │   └── message_service.py      # writes the message and the chat's last-message columns
 │   ├── sockets/
-│   │   └── chat_socket.py          # the `join-chat` handler
+│   │   └── chat_socket.py          # the `connect` guard and the `join-chat` handler
 │   └── migrations/versions/        # Alembic revisions
 └── frontend/
     ├── index.html
+    ├── vite.config.ts              # port 5173, strictPort, the `@` alias
     ├── docs/frontend-guide.md      # the front-end conventions this app follows
     └── src/
         ├── components/             # atoms, molecules, organisms
@@ -175,8 +194,9 @@ exists — which is why `sockets/chat_socket.py` can reuse `ChatService` unchang
 Each `services` domain on the front end has the same shape: `*.schemas.ts` (Zod validates the
 response at the border and converts snake_case to camelCase), `*.types.ts` (inferred from the
 schema), `*.service.ts` (axios only), `*.queries.ts` / `*.mutations.ts` (`queryOptions` /
-`mutationOptions` with a key factory) and one thin hook per operation — that last one is what
-the UI imports.
+`mutationOptions` with a key factory), `*.cache.ts` where a domain writes to the cache without
+going through the network, and one thin hook per operation — that last one is what the UI
+imports.
 
 ### Design decisions
 
@@ -188,11 +208,11 @@ neutral module the arrow always points the same way — everything imports `exte
 imports `app`.
 
 **The channel is behind a gateway.** `RealtimeGateway` (`realtime.contract.ts`) declares
-`connect`, `joinChat` and `onNewMessage`; `socket-io-gateway.ts` is the only file in the
-codebase that imports `socket.io-client`, and `setRealtimeGateway()` installs it once at
-bootstrap. The default implementation is a null object that does nothing, which is what let
-the whole REST phase ship with the seam already in place. No component, page or hook knows the
-transport exists.
+`connect`, `disconnect`, `isConnected`, `joinChat` and `onNewMessage`; `socket-io-gateway.ts`
+is the only file in the codebase that imports `socket.io-client`, and `setRealtimeGateway()`
+installs it once at bootstrap. The default implementation is a null object that does nothing,
+which is what let the whole REST phase ship with the seam already in place. No component, page
+or hook knows the transport exists.
 
 **A message enters the cache through one function.** `applyIncomingMessage(queryClient,
 message)` writes to the same `queryKey` the conversation is already rendering from. The socket
@@ -203,30 +223,66 @@ UI to keep in sync with the normal one.
 **The optimistic bubble is matched by content, not by id.** The client mints its own id
 (`optimistic:<uuid>`) and the server mints another, so they can never be compared. When the
 confirmed message arrives, the cache looks for a still-pending bubble with the same text from
-`@me` and swaps it; failing that, it inserts. Insertion is de-duplicated by id and re-sorted by
-instant — the sender receives its own message twice (once as the response, once as the
-broadcast) and must not see it twice.
+the same sender and swaps it; failing that, it inserts. That fallback is not hypothetical: in a
+freshly created conversation the first `GET .../messages` can land between the send and its
+answer and carry the bubble away. Insertion is de-duplicated by id and re-sorted by instant —
+the sender receives its own message twice (once as the response, once as the broadcast) and
+must not see it twice.
 
-**`POST /chat` is idempotent, so the front end treats it as a read.** `ChatService.create_chat`
-returns the existing conversation when the pair already has one. Behaving like a read, it fits
-in a TanStack query instead of a mutation, which keeps chat resolution out of a `useEffect` and
-makes `/conversas/:userId` openable straight from a link.
+**The chat id comes from the list, and `POST /chat` runs only on the first send.** Earlier the
+front end resolved the id by calling the idempotent `POST /chat` every time the screen opened —
+which meant browsing names wrote empty conversations into the database. Now `GET /chats` is the
+source of every `chat_id`, opening a conversation is a pure read, and the only `POST /chat` in
+the app lives in the composer's submit path: `chatId ?? (await createChat(...)).chatId`. A
+conversation exists because someone spoke.
 
-**The route carries the contact id, not the chat id.** The contact exists as soon as
-`GET /users` answers; the chat only exists after `POST /chat`. Addressing the screen by the
-contact keeps the URL valid before the first message is ever sent.
+**The route carries the contact id, not the chat id.** The contact exists as soon as the
+conversation list (or `GET /users`) answers; the chat may not exist at all. Addressing the
+screen by the contact keeps `/conversas/:userId` valid before the first message is ever sent —
+and still valid afterwards, because `GET /chats` returns the participant next to each chat.
+
+**The last message lives on the chat row.** `chat.last_message_at` and `chat.last_message_id`
+are written by `MessageService.create_message` in the same commit as the message itself, so the
+preview can never disagree with the history. The alternative — a correlated subquery or one
+extra query per row — costs more the longer the list gets, and this list is read on every page
+load. `last_message_at` is indexed because it is the sort key: `ORDER BY last_message_at DESC,
+created_at DESC`, and MySQL sorts `NULL` last in `DESC`, which puts a conversation with no
+message at the bottom without a special case.
+
+**The sidebar reorders in the cache, in the server's order.** `applyChatActivity` updates the
+preview and the timestamp and re-sorts the list in the same frame as the message — no request
+per message received. Its comparator deliberately mirrors the backend's `ORDER BY`: if the two
+ever diverge, the sidebar would jump on the next refetch. When the message belongs to a
+conversation that is not in the list yet, there is nothing to patch — the participant is missing
+— so it invalidates instead and lets the server assemble the row.
+
+**One list, two modes.** The sidebar renders conversations by default and contacts when you ask
+to start a new one; both use the same row component, so the difference is copy, not markup.
+`GET /users` is no longer the conversation list, so it is fetched lazily: only when picking
+someone, or when a `/conversas/:userId` link names a contact you have no conversation with and
+the screen needs a name to show. People you already talk to are filtered out of the picker.
+
+**Identity is a query; the displayed email is still local.** `GET /me` returns the authenticated
+user, and `userQueries.me` caches it with `staleTime: Infinity` — the identity cannot change
+while the session lives. It is a prerequisite for rendering the history, not a decoration: with
+no id there is no side, so `MessageList` shows the spinner until it arrives.
+`isOutgoingMessage(message, currentUserId)` now compares the real sender instead of reasoning
+"whoever is not the contact is me". The email typed at login stays in `localStorage` anyway,
+because the route guard has to decide whether to render the app *before* any request goes out;
+it feeds the header and nothing else. Authorization stays entirely on the server, and any `401`
+clears both.
 
 **One room per conversation.** The browser emits `join-chat` and lands in `chat:<chat_id>`; the
 route emits to that room only, and only after the commit — so a client is never told about a
-state the database has not accepted yet. Joining is the client's job on every connection: a
-reconnect gets a fresh session id, which belongs to no room.
+state the database has not accepted yet. The `connect` handler returns `False` for an
+unauthenticated socket, so `join-chat` only ever runs with a `current_user`. Joining is the
+client's job on every connection: a reconnect gets a fresh session id, which belongs to no room.
 
-**Two identifiers on the client, because the server offers none.** There is no `GET /auth/me`,
-so the front end cannot know its own `user_id`. Since a chat here has exactly two participants,
-the side of a bubble is decided by elimination — `isOutgoingMessage(message, peerId)` reads
-"whoever is not the contact is me". The displayed identity is just the email that was typed at
-login, kept in `localStorage`; authorization stays entirely on the server, and any `401` clears
-it.
+**Only the conversation scrolls.** `AppShell` is the single fixed height in the tree
+(`height: 100dvh`, `overflow: hidden`), and the chat grid is capped at `minmax(0, 1fr)`. Without
+a closed box at the top, the message list's `flex: 1` + `overflow-y: auto` resolves against its
+content, never clips, and the page itself becomes the scroller — taking the header and the
+sidebar with it. `dvh` rather than `vh` so the mobile address bar is accounted for.
 
 **UUIDv7 primary keys.** Identifiers use `uuid.uuid7()` (available from Python 3.14). Unlike
 UUIDv4 it embeds a millisecond timestamp in its most significant bits, so it sorts by creation
@@ -247,17 +303,26 @@ it without guessing.
      │  POST /auth/login             │                               │
      ├──────────────────────────────>│  session cookie (httpOnly)    │
      │                               │                               │
-     │  POST /chat { receiver_id }   │                               │
-     ├──────────────────────────────>│  create-or-return the pair    │
-     │<── 201 { chat_id }            │                               │
+     │  GET /me                      │                               │
+     ├──────────────────────────────>│  own id: which side a bubble  │
+     │<── 200 { id, email }          │  falls on                     │
+     │                               │                               │
+     │  GET /chats                   │                               │
+     ├──────────────────────────────>│  each chat + peer + last msg  │
+     │<── 200 { chats }              │  ordered by activity          │
      │                               │                               │
      │  socket: join-chat            │          socket: join-chat    │
      ├──────────────────────────────>│<──────────────────────────────┤
      │          both now in room  chat:<chat_id>                     │
      │                               │                               │
      ├─ optimistic bubble: "sending" │                               │
-     │  POST /chat/<id>/messages     │                               │
-     ├──────────────────────────────>│  row committed                │
+     │                               │                               │
+     │  POST /chat  (first send only)│  create-or-return the pair    │
+     ├──────────────────────────────>│                               │
+     │<── 201 { chat_id }            │                               │
+     │                               │                               │
+     │  POST /chat/<id>/messages     │  one commit: the message row  │
+     ├──────────────────────────────>│  and the chat's last_message  │
      │                               ├── socket: new-message ───────>│
      │<── 201 { message } ───────────┤    { id, chat_id, sender_id,  │
      │                               │      content, created_at }    │
@@ -285,6 +350,8 @@ exists. Browser B never issued a request at all.
 | --- | --- | --- |
 | `id` | `String(36)` | UUIDv7, primary key |
 | `created_at` | `DATETIME` | as above |
+| `last_message_at` | `DATETIME` | nullable, indexed — the sort key of the conversation list |
+| `last_message_id` | `String(36)` | nullable, FK → `message.id` — the preview |
 
 **`chat_participant`**
 
@@ -306,6 +373,11 @@ exists. Browser B never issued a request at all.
 The join table is what makes a conversation a set of participants rather than a
 `user_a`/`user_b` pair. Only two rows are ever written today, but nothing in the schema says
 so — the "exactly two" assumption lives in `ChatService`, not in the tables.
+
+`chat.last_message_id` and `message.chat_id` point at each other, so the two tables cannot both
+be created with their constraints in one step. The column arrives in its own later revision,
+with an explicitly named foreign key (`fk_chat_last_message_id_message`) — MySQL would invent a
+name otherwise, and the downgrade would have nothing to drop.
 
 ## Getting started
 
@@ -333,14 +405,9 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 pip install -r requirements.txt
-pip install Flask-Migrate            # see the note below
 
 cp .env.example .env                 # then fill it in, see Configuration
 ```
-
-> **`requirements.txt` is currently missing `Flask-Migrate`**, even though `app.py` imports it
-> and the `migrations/` directory is versioned here. Until the file is fixed, install it by
-> hand or the app will not boot. It is the first item on the [Roadmap](#roadmap).
 
 Create the schema:
 
@@ -416,7 +483,9 @@ Every route except register and login requires the session cookie.
 | `POST` | `/auth/register` | Create an account |
 | `POST` | `/auth/login` | Start a session (sets the cookie) |
 | `POST` | `/auth/logout` | End the session |
+| `GET` | `/me` | The authenticated user |
 | `GET` | `/users` | List every user except the caller |
+| `GET` | `/chats` | The caller's conversations, with peer and last message |
 | `POST` | `/chat` | Create or return the conversation with a contact |
 | `POST` | `/chat/<chat_id>/messages` | Send a message; emits `new-message` |
 | `GET` | `/chat/<chat_id>/messages` | Read the history, oldest first |
@@ -493,17 +562,34 @@ characters).
 { "message": "Successful login" }
 ```
 
-The body carries no user object — no id, no email. That single omission is what shapes the
-front end's identity handling; see [Design decisions](#design-decisions).
+The body carries no user object. The client learns who it is from `GET /me`; what it keeps from
+the login screen is the email it already had — see [Design decisions](#design-decisions).
 
 **Errors** — `400` invalid payload; `401` wrong email or password.
 
 ---
 
+#### `GET /me`
+
+Whoever the session cookie belongs to. The only way the front end can know its own `id`, since
+the login response says nothing and the cookie is httpOnly.
+
+**Returns** `200 OK` — the user at the root of the response, with no envelope:
+
+```json
+{
+  "id": "0199a1c1-0f0e-7d0c-8b0a-9a8b7c6d5e4f",
+  "email": "ana@example.com",
+  "created_at": "2026-09-01T09:12:44Z"
+}
+```
+
+---
+
 #### `GET /users`
 
-Every registered user except the caller. This doubles as the contact list, since there is no
-`GET /chats` to enumerate conversations.
+Every registered user except the caller. This is the picker for starting a new conversation —
+not the conversation list, which is `GET /chats`.
 
 **Returns** `200 OK`
 
@@ -521,10 +607,53 @@ Every registered user except the caller. This doubles as the contact list, since
 
 ---
 
+#### `GET /chats`
+
+The caller's conversations, most recently active first (`last_message_at DESC, created_at
+DESC`, so a conversation with no message sinks to the bottom).
+
+`participant` is always the *other* side: the backend drops the caller while assembling the
+response, so the client has nothing to filter. `last_message` is the same object shape the
+message endpoints return, which is why the sidebar can render a preview and decide "You:" with
+the rules it already has.
+
+**Returns** `200 OK`
+
+```json
+{
+  "chats": [
+    {
+      "id": "0199a1c2-88f0-7c31-b4d2-5e6f7a8b9c0d",
+      "participant": {
+        "id": "0199a1c2-3d4e-7f80-9a1b-2c3d4e5f6a7b",
+        "email": "bruno@example.com"
+      },
+      "created_at": "2026-09-03T14:20:55Z",
+      "last_message_at": "2026-09-03T14:22:07.481293Z",
+      "last_message": {
+        "id": "0199a1c3-11aa-7bb2-8c41-1e2f3a4b5c6d",
+        "chat_id": "0199a1c2-88f0-7c31-b4d2-5e6f7a8b9c0d",
+        "sender_id": "0199a1c1-0f0e-7d0c-8b0a-9a8b7c6d5e4f",
+        "content": "hello",
+        "created_at": "2026-09-03T14:22:07.481293Z"
+      }
+    }
+  ]
+}
+```
+
+`last_message_at` and `last_message` are `null` while a conversation has no message. That is
+reachable: a chat is born from a `POST /chat` followed by a `POST .../messages`, and if the
+second call fails, an empty conversation is exactly what is left.
+
+There is no pagination and no unread count.
+
+---
+
 #### `POST /chat`
 
 Returns the conversation between the caller and the contact, creating it only if the pair has
-none.
+none. The front end calls this once per conversation, on the first send.
 
 ```json
 {
@@ -549,7 +678,8 @@ happened on this particular call.
 
 #### `POST /chat/<chat_id>/messages`
 
-Stores the message and emits `new-message` into `chat:<chat_id>`.
+Stores the message, updates the chat's `last_message_at` / `last_message_id` in the same commit,
+and emits `new-message` into `chat:<chat_id>`.
 
 ```json
 {
@@ -574,19 +704,17 @@ caps it at 2000 characters; the backend does not.
 }
 ```
 
-**Errors** — `400` invalid payload, or the caller is not a participant of that chat.
-
-> **A non-participant gets `400`, not `403`.** The service raises `ValueError` for both
-> "malformed" and "not yours", and the route maps that exception to one status. It is the same
-> answer for a chat that does not exist, which at least leaks nothing — but the status is
-> wrong; see the [Roadmap](#roadmap).
+**Errors** — `400` invalid payload; `403` the caller is not a participant of that chat. The
+service raises a dedicated `NotChatParticipantError` for that case, which is what lets the route
+tell it apart from a malformed body. A chat that does not exist gets the same `403`, which
+leaks nothing about whether it is there.
 
 ---
 
 #### `GET /chat/<chat_id>/messages`
 
-The whole history, oldest first. This is the only revalidation path the UI has: the refresh
-button in the conversation header.
+The whole history, oldest first. This is the only revalidation path the conversation has: the
+refresh button in its header.
 
 **Returns** `200 OK`
 
@@ -606,20 +734,25 @@ button in the conversation header.
 
 There is no pagination: a conversation is returned whole.
 
-**Errors** — `400` the caller is not a participant of that chat.
+**Errors** — `400` the caller is not a participant of that chat. This one still answers `400`
+where the `POST` now answers `403`; see the [Roadmap](#roadmap).
 
 ## Real-time channel
 
 Socket.IO is served by Flask itself, at `/socket.io`. The handshake carries the same session
-cookie as the REST calls, which is why the client is created with `withCredentials: true`.
+cookie as the REST calls, which is why the client is created with `withCredentials: true` — and
+why `connect` can refuse an anonymous socket by returning `False`, before any event handler
+runs.
 
 | Direction | Event | Payload | Meaning |
 | --- | --- | --- | --- |
 | client → server | `join-chat` | `{ "chat_id": "<uuid>" }` | Subscribe to one conversation's room |
 | server → client | `new-message` | the `MessageResponse` object | A message was stored in that chat |
 
-Rooms are named `chat:<chat_id>`. The event is emitted only to that room, and only after the
-commit, so nobody is notified of a state the database has not accepted.
+Rooms are named `chat:<chat_id>`. `join-chat` checks participation through
+`ChatService.ensure_user_is_participant` before joining, and the event is emitted only to that
+room, and only after the commit — so nobody is notified of a state the database has not
+accepted.
 
 The payload is the exact shape `GET .../messages` returns for one item, on purpose: the client
 validates it with the same Zod schema and runs it through the same camelCase transform, so a
@@ -628,35 +761,51 @@ pushed message and a fetched one are indistinguishable by the time they reach th
 Joining is the client's responsibility on **every** connection, not just the first — a reconnect
 gets a fresh session id, which belongs to no room.
 
+Two limits worth knowing, both from there being no room per *user*: a conversation someone
+starts with you does not arrive on the channel, because you are not in a room you do not know
+about yet, and activity in a conversation you have never opened this session does not move your
+sidebar. Both surface on the next `GET /chats` instead.
+
 ## Front end
 
 Four screens: login, register, the chat itself, and a not-found page. The chat is a two-column
 layout that collapses to one column on narrow viewports, with the conversation replacing the
 contact list.
 
-**Contacts** — `GET /users` is the list, since the backend has no notion of "my conversations".
-Filtering is client-side, over the email.
+**Conversations** — `GET /chats` is the sidebar and the source of every `chat_id`. Each row
+already carries the other participant and the last message, so the list renders from one
+request. The timestamp gets more precise the more recent it is: today shows the time, yesterday
+says "yesterday", anything older is a short date — the row is narrow, and the exact hour of a
+conversation from three weeks ago is not interesting.
 
-**Conversation** (`/conversas/:userId`) — two chained queries: `POST /chat` resolves the chat id
-for that contact, and the history query turns on once it answers. `enabled` does the
-orchestration; there is no `useEffect` coordinating them.
+**Contacts** — `GET /users`, fetched only when needed: when picking someone to start a
+conversation with, or when a `/conversas/:userId` link names a contact you have no conversation
+with. Filtering is client-side, over the email and the name derived from it.
+
+**Conversation** (`/conversas/:userId`) — three reads and no write: the identity (`GET /me`), the
+conversation list where the `chatId` lives, and the history, which turns on once there is a
+`chatId` to ask about. `enabled` does the orchestration; there is no `useEffect` coordinating
+them. When the conversation does not exist yet, `chatId` is `undefined`, the history never
+fires, and the composer is still usable — the first send creates the chat and posts into it.
 
 Three decisions worth calling out:
 
-**Nothing revalidates on its own.** No polling, no refetch on window focus, no refetch on
-reconnect; `staleTime` is `Infinity`. During the REST-only phase this was deliberate — with two
-tabs side by side, a focus refetch fakes real time and hides exactly the gap the channel exists
-to fill. Now that the channel is in, the socket is the only thing that brings a new message
-unprompted, and the refresh button is the manual fallback.
+**Only the history refuses to revalidate.** `messageQueries.byChat` sets `staleTime: Infinity`
+and turns off refetch on window focus and on reconnect: the channel is what brings a new
+message, and a periodic refetch would both repeat its work and disguise its absence. The rest of
+the app keeps the client defaults (15s stale, refetch on focus) — which is exactly what makes a
+conversation started by someone else eventually show up, since the channel cannot announce it.
+The refresh button in the conversation header is the manual fallback for the history.
 
 **The socket writes to the cache, not to the screen.** `useChatRealtime` subscribes, validates,
-and hands the message to `applyIncomingMessage`. It renders nothing and owns no state, so
-unmounting the conversation tears the subscription down without touching what the socket
-connection itself is doing.
+and hands the message to `applyIncomingMessage` and `applyChatActivity`. It renders nothing and
+owns no state, so unmounting the conversation tears the subscription down without touching what
+the socket connection itself is doing.
 
 **Error feedback is centralized in the `QueryClient`.** Each call declares
-`meta.errorMessageKey`; the translation and the toast happen in one place. Login and register
-declare no `meta`, because they show the error inside the card instead.
+`meta.errorMessageKey`; the translation and the toast happen in one place, and `401` is skipped
+because the `AuthProvider` already reports it. Login and register declare no `meta`, because
+they show the error inside the card instead.
 
 The component layout — `index.tsx` for UI, `use-*.ts` for logic, `styles.ts` for styling, and
 the atoms/molecules/organisms split — follows the conventions written down in
@@ -665,15 +814,18 @@ the atoms/molecules/organisms split — follows the conventions written down in
 Visually the app commits to a "paper and ink" direction: a warm paper ground, white surfaces
 separated by 1px hairlines instead of shadows, and color reserved for meaning — dark ink for
 your own voice, blue for action, red for error. The conversation is the only part of the screen
-that moves.
+that moves, and the only part that scrolls.
 
 Available scripts:
 
 ```bash
-npm run dev           # dev server on 5173
+npm run dev           # dev server on 5173 (strictPort)
 npm run build         # type-check and build
+npm run preview       # serve the build
 npm run lint          # eslint (prettier as a rule)
+npm run lint:fix      # eslint --fix
 npm run format        # prettier over src
+npm run format:check  # prettier, no writes
 npm run type-check    # tsc, no emit
 ```
 
@@ -682,26 +834,33 @@ npm run type-check    # tsc, no emit
 - [x] `User`, `Chat`, `ChatParticipant` and `Message` modeling, with UUIDv7 and UTC column types
 - [x] Alembic migrations instead of `create_all()`
 - [x] Session authentication with flask-login, hashed passwords
-- [x] Contact list, idempotent chat creation, message history
+- [x] Idempotent chat creation, message history
 - [x] React front end: login, register, contacts, conversation, optimistic send
 - [x] Socket.IO channel with one room per conversation
 - [x] Messages pushed on `new-message` and merged into the query cache
-- [ ] Add `Flask-Migrate` to `requirements.txt` — it is imported by `app.py` but not declared
-- [ ] Fix `ChatService.ensure_user_is_participant`: it compares a boolean against `None`, so it
-      always returns `True` and the `join-chat` guard never actually rejects anyone
-- [ ] Require authentication on the socket `connect` handler — today an anonymous client
-      reaches `join-chat`, where `current_user.id` raises instead of refusing
-- [ ] Fix `socketIoGateway.isConnected()`: it reads `socket.connect`, the method, which is
-      always truthy — it should read `socket.connected`
-- [ ] Return `403` instead of `400` when the caller is not a participant of a chat
-- [ ] Update the stale copy and comments left from the REST-only phase — the conversation
-      header still announces that real time is coming later
+- [x] Require authentication on the socket `connect` handler
+- [x] `GET /me`, so the client stops inferring its own identity by elimination
+- [x] `GET /chats`, so the conversation list stops being the user list — and so opening a
+      conversation stops creating one
+- [x] Last message and last activity on the chat row, with the sidebar reordering in the cache
+- [x] Return `403` when the caller is not a participant of a chat (on `POST .../messages`)
+- [x] Scroll only the conversation, keeping the header and the sidebar fixed
+- [ ] Return `403` on `GET /chat/<id>/messages` too — `MessageService.get_messages` still raises
+      a bare `ValueError`, which the route maps to `400`
+- [ ] A room per user (`user:<id>`), so a brand-new conversation and activity in a conversation
+      you do not have open reach the sidebar over the channel instead of on the next `GET /chats`
+- [ ] Leave the room when the conversation closes: `join-chat` has no counterpart, so a socket
+      stays in every room it visited during that connection
+- [ ] Unread counts, which the `last_message_at` column now makes cheap to compute
 - [ ] Tests: `pytest` is installed and there is no suite yet; `MessageService` and
       `ChatService` are the layers worth covering first
-- [ ] `GET /auth/me`, so the client stops inferring its own identity by elimination
-- [ ] `GET /chats`, so the conversation list stops being the user list
 - [ ] Pagination for the message history
 - [ ] Read the allowed origins from the environment instead of hardcoding `localhost:5173`
+- [ ] Drop the debug `console.log`s from `socket-io-gateway.ts`
+- [ ] Move the `GET /chats` contracts out of `schemas/chat/create_chat_request.py` — the file
+      outgrew its name
+- [ ] Refresh the comment in `services/auth/auth.schemas.ts`: it still says the backend does not
+      expose the authenticated user
 
 ## License
 
