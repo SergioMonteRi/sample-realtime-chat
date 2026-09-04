@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from extensions import db
 
@@ -76,3 +77,22 @@ class ChatService():
         )
 
         return db.session.scalar(stmt) is not None
+
+    @staticmethod
+    def get_chats(
+        current_user_id: UUID,
+    ) -> list[Chat]:
+        stmt = (
+            select(Chat)
+            .join(ChatParticipant)
+            .where(
+                ChatParticipant.user_id == current_user_id
+            )
+            .options(
+                selectinload(Chat.participants)
+                .selectinload(ChatParticipant.user)
+            )
+            .order_by(Chat.created_at.desc())
+        )
+
+        return list(db.session.scalars(stmt).all())

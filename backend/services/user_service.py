@@ -14,4 +14,4 @@ class UserService:
             User.id != current_user_id
         )
         
-        return db.session.scalars(stmt).all()
+        return list(db.session.scalars(stmt).all())

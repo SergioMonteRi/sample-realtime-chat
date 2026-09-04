@@ -34,6 +34,24 @@ export const replaceMessage = (
     .sort(byChronology)
 
 /**
+ * Encerra o ciclo de vida de uma mensagem otimista.
+ *
+ * Troca o balao pendente pela mensagem do servidor — ou insere, se o balao
+ * nao estiver mais la. Isso acontece de verdade: numa conversa recem-criada,
+ * o primeiro `GET /messages` pode chegar entre o envio e a resposta e levar
+ * o balao embora. Sem esse `insert` de reserva, a mensagem sumiria da tela
+ * ate o proximo refetch.
+ */
+export const settleMessage = (
+  messages: ChatMessage[],
+  optimisticId: string,
+  message: ChatMessage,
+): ChatMessage[] =>
+  messages.some((current) => current.id === optimisticId)
+    ? replaceMessage(messages, optimisticId, message)
+    : insertMessage(messages, message)
+
+/**
  * Porta de entrada de uma mensagem que a aplicacao nao pediu — o evento
  * `new-message` do canal (ver `use-chat-realtime`).
  *

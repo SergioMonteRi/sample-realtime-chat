@@ -1,11 +1,12 @@
 import { BaseAvatar } from '@/components/atoms'
-import type { User } from '@/services/users'
+import type { ChatParticipant } from '@/services/chats'
 import { getDisplayNameFromEmail } from '@/utils'
 
 import { ContactButton, ContactCopy, ContactEmail, ContactName } from './styles'
 
 type ContactItemProps = {
-  contact: User
+  /** Serve tanto ao participante de uma conversa quanto a um contato novo. */
+  contact: ChatParticipant
   isActive: boolean
   label: string
   onSelect: (contactId: string) => void

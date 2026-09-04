@@ -1,22 +1,40 @@
 {
   "sidebar": {
-    "title": "Contatos",
-    "searchLabel": "Buscar contato",
-    "searchPlaceholder": "Buscar por e-mail",
-    "count_one": "{{count}} pessoa",
-    "count_other": "{{count}} pessoas",
-    "loading": "Carregando contatos",
-    "empty": {
-      "title": "Ninguém por aqui ainda",
-      "description": "Assim que outra pessoa criar uma conta, ela aparece nesta lista."
-    },
+    "newChatLabel": "Começar uma conversa nova",
+    "backLabel": "Voltar para as conversas",
     "noResults": {
-      "title": "Nenhum contato encontrado",
-      "description": "Tente outro trecho do e-mail."
+      "title": "Nada encontrado",
+      "description": "Tente outra parte do e-mail."
     },
-    "error": {
-      "title": "Não deu para carregar os contatos",
-      "description": "A lista vem do backend. Verifique se ele está no ar e tente de novo."
+    "conversations": {
+      "title": "Conversas",
+      "searchLabel": "Buscar conversa",
+      "searchPlaceholder": "Buscar por e-mail",
+      "loading": "Carregando conversas",
+      "count_one": "{{count}} conversa",
+      "count_other": "{{count}} conversas",
+      "empty": {
+        "title": "Nenhuma conversa ainda",
+        "description": "Comece uma pelo botão acima e fale com quem já tem conta."
+      },
+      "error": {
+        "title": "Não foi possível carregar as conversas",
+        "description": "A lista vem do backend. Verifique se ele está no ar e tente de novo."
+      }
+    },
+    "contacts": {
+      "title": "Nova conversa",
+      "searchLabel": "Buscar contato",
+      "searchPlaceholder": "Buscar por e-mail",
+      "loading": "Carregando contatos",
+      "empty": {
+        "title": "Ninguém novo por aqui",
+        "description": "Você já tem conversa com todas as pessoas cadastradas."
+      },
+      "error": {
+        "title": "Não foi possível carregar os contatos",
+        "description": "A lista vem do backend. Verifique se ele está no ar e tente de novo."
+      }
     }
   },
   "conversation": {
@@ -33,15 +51,15 @@
     "sentAt": "Enviada às {{time}}",
     "empty": {
       "title": "Escolha uma conversa",
-      "description": "Selecione um contato na coluna ao lado para abrir o histórico."
+      "description": "Selecione uma na coluna ao lado para abrir o histórico, ou comece uma conversa nova."
     },
     "start": {
       "title": "Diga o primeiro olá",
-      "description": "Nenhuma mensagem trocada com {{name}} até agora."
+      "description": "Nenhuma mensagem trocada com {{name}} até agora. A conversa é criada quando você envia a primeira."
     },
     "error": {
-      "title": "Não deu para carregar a conversa",
-      "description": "O histórico vem do backend. Tente novamente em instantes."
+      "title": "Não foi possível carregar a conversa",
+      "description": "O histórico vem do backend. Tente de novo em instantes."
     }
   },
   "composer": {
@@ -56,10 +74,11 @@
     "messageMax": "A mensagem passa de {{count}} caracteres."
   },
   "errors": {
+    "chatsFailed": "Não foi possível carregar as conversas.",
     "contactsFailed": "Não foi possível carregar os contatos.",
     "identityFailed": "Não foi possível identificar a sua sessão.",
     "messagesFailed": "Não foi possível carregar as mensagens.",
-    "openConversationFailed": "Não foi possível abrir a conversa.",
+    "openConversationFailed": "Não foi possível começar a conversa.",
     "sendMessageFailed": "Não foi possível enviar a mensagem."
   }
 }

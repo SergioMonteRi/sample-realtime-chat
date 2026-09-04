@@ -1,16 +1,16 @@
 import { useState } from 'react'
 
-import type { User } from '@/services/users'
+import type { ChatParticipant } from '@/services/chats'
 
 import { matchesSearchTerm } from './chat-sidebar.utils'
 
 interface UseChatSidebarParams {
-  contacts: User[]
+  contacts: ChatParticipant[]
 }
 
 interface UseChatSidebarReturn {
   searchTerm: string
-  filteredContacts: User[]
+  filteredContacts: ChatParticipant[]
   hasSearchTerm: boolean
   handleSearchChange: (term: string) => void
 }

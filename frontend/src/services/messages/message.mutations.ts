@@ -1,10 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { mutationOptions } from '@tanstack/react-query'
 
-import { insertMessage, replaceMessage } from './message.cache'
+import { insertMessage, settleMessage } from './message.cache'
 import { messageKeys, messageQueries } from './message.queries'
 import { messageService } from './message.service'
-import type { SendMessageRequest } from './message.types'
+import type { SendMessageVariables } from './message.types'
 import { createOptimisticMessage, toSentMessage } from './message.utils'
 
 export const messageMutations = {
@@ -14,22 +14,22 @@ export const messageMutations = {
    * volta — o id definitivo vem de la. Se falhar, a lista retorna ao estado
    * anterior e o texto e devolvido ao campo (ver `use-message-composer`).
    */
-  send: (queryClient: QueryClient, chatId: string, senderId: string) => {
-    const { queryKey } = messageQueries.byChat(chatId)
+  send: (queryClient: QueryClient, senderId: string) =>
+    mutationOptions({
+      mutationKey: [...messageKeys.all, 'send'],
+      mutationFn: ({ chatId, content }: SendMessageVariables) =>
+        messageService.createMessage(chatId, { content }),
 
-    return mutationOptions({
-      mutationKey: [...messageKeys.byChat(chatId), 'send'],
-      mutationFn: (payload: SendMessageRequest) =>
-        messageService.createMessage(chatId, payload),
+      onMutate: async ({ chatId, content }) => {
+        const { queryKey } = messageQueries.byChat(chatId)
 
-      onMutate: async (payload) => {
         await queryClient.cancelQueries({ queryKey })
 
         const previousMessages = queryClient.getQueryData(queryKey)
         const optimisticMessage = createOptimisticMessage({
           chatId,
           senderId,
-          content: payload.content,
+          content,
         })
 
         queryClient.setQueryData(queryKey, (current) =>
@@ -39,9 +39,11 @@ export const messageMutations = {
         return { optimisticId: optimisticMessage.id, previousMessages }
       },
 
-      onSuccess: (message, _payload, context) => {
+      onSuccess: (message, variables, context) => {
+        const { queryKey } = messageQueries.byChat(variables.chatId)
+
         queryClient.setQueryData(queryKey, (current) =>
-          replaceMessage(
+          settleMessage(
             current ?? [],
             context.optimisticId,
             toSentMessage(message),
@@ -49,11 +51,12 @@ export const messageMutations = {
         )
       },
 
-      onError: (_error, _payload, context) => {
+      onError: (_error, variables, context) => {
+        const { queryKey } = messageQueries.byChat(variables.chatId)
+
         queryClient.setQueryData(queryKey, context?.previousMessages)
       },
 
       meta: { errorMessageKey: 'chat:errors.sendMessageFailed' },
-    })
-  },
+    }),
 }

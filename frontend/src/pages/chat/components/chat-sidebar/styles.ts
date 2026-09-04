@@ -20,13 +20,16 @@ export const SidebarHeader = styled.div`
 
 export const SidebarTitleRow = styled.div`
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: ${({ theme }) => theme.spacing.xs};
+  min-height: 2rem;
 `
 
+/* Ocupa a sobra para empurrar a contagem e o botao para a direita. */
 export const SidebarTitle = styled.h2`
   ${microLabel};
+  flex: 1;
+  min-width: 0;
   color: ${({ theme }) => theme.colors.textMuted};
 `
 

@@ -1,4 +1,4 @@
-import { useChatWithUserQuery } from '@/services/chats'
+import { useChatsQuery } from '@/services/chats'
 import type { ChatMessage } from '@/services/messages'
 import { useChatRealtime, useMessagesQuery } from '@/services/messages'
 import { useCurrentUserQuery } from '@/services/users'
@@ -18,21 +18,23 @@ interface UseConversationPanelReturn {
 }
 
 /**
- * Duas etapas encadeadas: primeiro o id da conversa com aquele contato,
- * depois o historico. A segunda query so liga quando a primeira responde —
- * `enabled` no lugar de um `useEffect` de orquestracao.
+ * Tres leituras, nenhuma escrita: a identidade (`GET /me`), a lista de
+ * conversas — que e onde o `chatId` mora — e o historico.
  *
- * Em paralelo corre a identidade (`GET /me`), que nao depende das outras
- * duas mas tambem nao e dispensavel: sem o proprio id nao se sabe de que
- * lado fica cada mensagem, entao ela entra no `isLoading`.
+ * O `chatId` sai de uma lista que a barra lateral tambem consome, entao o
+ * React Query serve as duas com uma requisicao. Ele e `undefined` quando a
+ * conversa ainda nao existe: nesse caso o historico nem liga, e a conversa
+ * passa a existir no primeiro envio (ver `use-message-composer`).
  */
 export const useConversationPanel = ({
   contactId,
 }: UseConversationPanelParams): UseConversationPanelReturn => {
   const currentUserQuery = useCurrentUserQuery()
+  const chatsQuery = useChatsQuery()
 
-  const chatQuery = useChatWithUserQuery({ userId: contactId })
-  const chatId = chatQuery.data?.chatId
+  const chatId = chatsQuery.data?.find(
+    (chat) => chat.participant.id === contactId,
+  )?.id
 
   const messagesQuery = useMessagesQuery({ chatId })
 
@@ -45,8 +47,8 @@ export const useConversationPanel = ({
       return
     }
 
-    if (chatQuery.isError) {
-      void chatQuery.refetch()
+    if (chatsQuery.isError) {
+      void chatsQuery.refetch()
       return
     }
 
@@ -59,10 +61,10 @@ export const useConversationPanel = ({
     messages: messagesQuery.data ?? [],
     isLoading:
       currentUserQuery.isLoading ||
-      chatQuery.isLoading ||
+      chatsQuery.isLoading ||
       messagesQuery.isLoading,
     hasError:
-      currentUserQuery.isError || chatQuery.isError || messagesQuery.isError,
+      currentUserQuery.isError || chatsQuery.isError || messagesQuery.isError,
     /* Refetch em cima de dados que ja estao na tela: o botao gira, a lista fica. */
     isRefreshing: messagesQuery.isFetching && !messagesQuery.isLoading,
     handleRefresh,

@@ -26,3 +26,11 @@ export interface ChatMessage extends Message {
 export interface SendMessageRequest {
   content: string
 }
+
+/**
+ * O `chatId` viaja com a chamada, e nao com o hook: numa conversa nova ele
+ * so existe depois do `POST /chat`, que acontece no mesmo clique do envio.
+ */
+export interface SendMessageVariables extends SendMessageRequest {
+  chatId: string
+}

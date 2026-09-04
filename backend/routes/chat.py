@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 from services.chat_service import ChatService
 from services.message_service import MessageService
 
-from schemas.chat.create_chat_request import CreateChatRequest
+from schemas.chat.create_chat_request import CreateChatRequest, GetChatsResponse, ChatResponse, ChatParticipantResponse
 from schemas.message.message_schemas import CreateMessageRequest, MessageResponse, GetMessagesResponse
 
 from extensions import socketio
@@ -98,7 +98,30 @@ def get_messages(chat_id: UUID):
 
     return jsonify(response.model_dump(mode="json"))
 
+@chat.route("/chats", methods=["GET"])
+@login_required
+def get_chats():
+    chats = ChatService.get_chats(current_user.id)
 
+    response = GetChatsResponse(
+        chats=[
+            ChatResponse(
+                id=chat.id,
+                created_at=chat.created_at,
+                participant=ChatParticipantResponse(
+                    id=participant.user.id,
+                    email=participant.user.email
+                )
+            )
+            for chat in chats
+            for participant in chat.participants
+            if participant.user_id != current_user.id
+        ]
+    )
+
+    return jsonify(
+        response.model_dump(mode="json")
+    ), 200
 
 
     

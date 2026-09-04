@@ -1,4 +1,4 @@
-import type { User } from '@/services/users'
+import type { ChatParticipant } from '@/services/chats'
 import { getDisplayNameFromEmail } from '@/utils'
 
 import { ConversationHeader } from '../conversation-header'
@@ -8,7 +8,7 @@ import { PanelWrapper } from './styles'
 import { useConversationPanel } from './use-conversation-panel'
 
 type ConversationPanelProps = {
-  contact: User
+  contact: ChatParticipant
 }
 
 export function ConversationPanel({ contact }: ConversationPanelProps) {
@@ -40,7 +40,11 @@ export function ConversationPanel({ contact }: ConversationPanelProps) {
         onRetry={handleRefresh}
       />
 
-      <MessageComposer chatId={chatId} senderId={currentUserId} />
+      <MessageComposer
+        chatId={chatId}
+        senderId={currentUserId}
+        peerId={contact.id}
+      />
     </PanelWrapper>
   )
 }

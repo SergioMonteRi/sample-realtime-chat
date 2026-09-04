@@ -1,22 +1,40 @@
 {
   "sidebar": {
-    "title": "Contacts",
-    "searchLabel": "Search contact",
-    "searchPlaceholder": "Search by e-mail",
-    "count_one": "{{count}} person",
-    "count_other": "{{count}} people",
-    "loading": "Loading contacts",
-    "empty": {
-      "title": "Nobody here yet",
-      "description": "As soon as someone else creates an account, they show up in this list."
-    },
+    "newChatLabel": "Start a new conversation",
+    "backLabel": "Back to the conversations",
     "noResults": {
-      "title": "No contact found",
+      "title": "Nothing found",
       "description": "Try another part of the e-mail."
     },
-    "error": {
-      "title": "Could not load the contacts",
-      "description": "The list comes from the backend. Check whether it is running and try again."
+    "conversations": {
+      "title": "Conversations",
+      "searchLabel": "Search conversation",
+      "searchPlaceholder": "Search by e-mail",
+      "loading": "Loading conversations",
+      "count_one": "{{count}} conversation",
+      "count_other": "{{count}} conversations",
+      "empty": {
+        "title": "No conversations yet",
+        "description": "Start one from the button above and talk to anyone who has an account."
+      },
+      "error": {
+        "title": "Could not load the conversations",
+        "description": "The list comes from the backend. Check whether it is running and try again."
+      }
+    },
+    "contacts": {
+      "title": "New conversation",
+      "searchLabel": "Search contact",
+      "searchPlaceholder": "Search by e-mail",
+      "loading": "Loading contacts",
+      "empty": {
+        "title": "Nobody new here",
+        "description": "You already have a conversation with everyone who has an account."
+      },
+      "error": {
+        "title": "Could not load the contacts",
+        "description": "The list comes from the backend. Check whether it is running and try again."
+      }
     }
   },
   "conversation": {
@@ -33,11 +51,11 @@
     "sentAt": "Sent at {{time}}",
     "empty": {
       "title": "Pick a conversation",
-      "description": "Select a contact in the column beside to open the history."
+      "description": "Choose one in the column beside to open the history, or start a new conversation."
     },
     "start": {
       "title": "Say the first hello",
-      "description": "No messages exchanged with {{name}} so far."
+      "description": "No messages exchanged with {{name}} so far. The conversation is created when you send the first one."
     },
     "error": {
       "title": "Could not load the conversation",
@@ -56,10 +74,11 @@
     "messageMax": "The message goes past {{count}} characters."
   },
   "errors": {
+    "chatsFailed": "Could not load the conversations.",
     "contactsFailed": "Could not load the contacts.",
     "identityFailed": "Could not identify your session.",
     "messagesFailed": "Could not load the messages.",
-    "openConversationFailed": "Could not open the conversation.",
+    "openConversationFailed": "Could not start the conversation.",
     "sendMessageFailed": "Could not send the message."
   }
 }

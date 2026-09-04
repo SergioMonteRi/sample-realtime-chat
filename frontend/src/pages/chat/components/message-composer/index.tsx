@@ -13,9 +13,14 @@ import { useMessageComposer } from './use-message-composer'
 type MessageComposerProps = {
   chatId: string | undefined
   senderId: string | undefined
+  peerId: string
 }
 
-export function MessageComposer({ chatId, senderId }: MessageComposerProps) {
+export function MessageComposer({
+  chatId,
+  senderId,
+  peerId,
+}: MessageComposerProps) {
   const { t } = useTranslation('chat')
 
   const {
@@ -27,7 +32,7 @@ export function MessageComposer({ chatId, senderId }: MessageComposerProps) {
     canSend,
     handleSubmitForm,
     handleKeyDown,
-  } = useMessageComposer({ chatId, senderId })
+  } = useMessageComposer({ chatId, senderId, peerId })
 
   return (
     <ComposerWrapper>

@@ -16,13 +16,18 @@ export function ChatPage() {
   const { t } = useTranslation('chat')
 
   const {
-    contacts,
-    selectedContact,
+    mode,
+    entries,
+    totalConversations,
     selectedContactId,
-    isLoadingContacts,
-    hasContactsError,
+    selectedPeer,
+    isResolvingPeer,
+    isLoading,
+    hasError,
     handleSelectContact,
-    handleRetryContacts,
+    handleStartPicking,
+    handleStopPicking,
+    handleRetry,
   } = useChat()
 
   const hasOpenConversation = Boolean(selectedContactId)
@@ -31,21 +36,25 @@ export function ChatPage() {
     <ChatLayout>
       <SidebarSlot $isHiddenOnNarrow={hasOpenConversation}>
         <ChatSidebar
-          contacts={contacts}
+          mode={mode}
+          entries={entries}
+          totalConversations={totalConversations}
           selectedContactId={selectedContactId}
-          isLoading={isLoadingContacts}
-          hasError={hasContactsError}
+          isLoading={isLoading}
+          hasError={hasError}
           onSelectContact={handleSelectContact}
-          onRetry={handleRetryContacts}
+          onStartPicking={handleStartPicking}
+          onStopPicking={handleStopPicking}
+          onRetry={handleRetry}
         />
       </SidebarSlot>
 
       <ConversationSlot $isHiddenOnNarrow={!hasOpenConversation}>
-        {selectedContact ? (
-          <ConversationPanel contact={selectedContact} />
+        {selectedPeer ? (
+          <ConversationPanel contact={selectedPeer} />
         ) : (
           <ConversationPlaceholder>
-            {isLoadingContacts && hasOpenConversation ? (
+            {isResolvingPeer ? (
               <BaseSpinner size={18} label={t('conversation.loading')} />
             ) : (
               <EmptyState

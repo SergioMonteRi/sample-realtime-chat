@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseAvatar, BaseButton, BaseIcon } from '@/components/atoms'
 import { ROUTES } from '@/constants'
-import type { User } from '@/services/users'
+import type { ChatParticipant } from '@/services/chats'
 import { getDisplayNameFromEmail } from '@/utils'
 
 import {
@@ -16,7 +16,7 @@ import {
 } from './styles'
 
 type ConversationHeaderProps = {
-  contact: User
+  contact: ChatParticipant
   isRefreshing: boolean
   onRefresh: () => void
 }

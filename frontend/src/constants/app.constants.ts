@@ -10,12 +10,6 @@ export const APP = {
   passwordMinLength: 8,
 
   /**
-   * O par de participantes de um chat nunca muda, entao o id resolvido pelo
-   * `POST /chat` vale para a sessao inteira.
-   */
-  chatResolutionStaleTimeMs: Infinity,
-
-  /**
    * O historico em cache nunca envelhece sozinho porque nao precisa: quem
    * traz mensagem nova e o canal, que escreve direto na query (ver
    * `services/messages/message.cache.ts`). Sobram a carga inicial, quando a

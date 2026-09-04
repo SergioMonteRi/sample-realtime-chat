@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 
-import { BaseButton, BaseSpinner } from '@/components/atoms'
+import { BaseButton, BaseIcon, BaseSpinner } from '@/components/atoms'
 import { EmptyState, SearchField } from '@/components/molecules'
-import type { User } from '@/services/users'
+import type { ChatParticipant } from '@/services/chats'
 import { getDisplayNameFromEmail } from '@/utils'
 
+import type { SidebarMode } from '../../use-chat'
 import { ContactItem } from '../contact-item'
 import {
   ContactList,
@@ -18,54 +19,94 @@ import {
 import { useChatSidebar } from './use-chat-sidebar'
 
 type ChatSidebarProps = {
-  contacts: User[]
+  mode: SidebarMode
+  entries: ChatParticipant[]
+  totalConversations: number
   selectedContactId: string | undefined
   isLoading: boolean
   hasError: boolean
   onSelectContact: (contactId: string) => void
+  onStartPicking: () => void
+  onStopPicking: () => void
   onRetry: () => void
 }
 
 export function ChatSidebar({
-  contacts,
+  mode,
+  entries,
+  totalConversations,
   selectedContactId,
   isLoading,
   hasError,
   onSelectContact,
+  onStartPicking,
+  onStopPicking,
   onRetry,
 }: ChatSidebarProps) {
   const { t } = useTranslation('chat')
   const { t: tCommon } = useTranslation('common')
 
   const { searchTerm, filteredContacts, hasSearchTerm, handleSearchChange } =
-    useChatSidebar({ contacts })
+    useChatSidebar({ contacts: entries })
 
-  const hasContacts = filteredContacts.length > 0
+  const isPicking = mode === 'contacts'
+
+  /**
+   * A estrutura da barra e a mesma nos dois modos; o que muda e a copy.
+   * Prefixar a chave evita duas arvores de JSX quase identicas.
+   */
+  const scope = isPicking ? 'sidebar.contacts' : 'sidebar.conversations'
+
+  const hasEntries = filteredContacts.length > 0
 
   return (
     <SidebarWrapper>
       <SidebarHeader>
         <SidebarTitleRow>
-          <SidebarTitle>{t('sidebar.title')}</SidebarTitle>
+          {isPicking && (
+            <BaseButton
+              variant="quiet"
+              size="icon"
+              onClick={onStopPicking}
+              aria-label={t('sidebar.backLabel')}
+              title={t('sidebar.backLabel')}
+            >
+              <BaseIcon name="arrowLeft" size={16} />
+            </BaseButton>
+          )}
 
-          {!isLoading && !hasError && (
+          <SidebarTitle>{t(`${scope}.title`)}</SidebarTitle>
+
+          {!isPicking && !isLoading && !hasError && (
             <SidebarCount>
-              {t('sidebar.count', { count: contacts.length })}
+              {t('sidebar.conversations.count', { count: totalConversations })}
             </SidebarCount>
+          )}
+
+          {!isPicking && (
+            <BaseButton
+              variant="secondary"
+              size="icon"
+              onClick={onStartPicking}
+              aria-label={t('sidebar.newChatLabel')}
+              title={t('sidebar.newChatLabel')}
+            >
+              <BaseIcon name="userPlus" size={16} />
+            </BaseButton>
           )}
         </SidebarTitleRow>
 
         <SearchField
           value={searchTerm}
-          label={t('sidebar.searchLabel')}
-          placeholder={t('sidebar.searchPlaceholder')}
+          label={t(`${scope}.searchLabel`)}
+          placeholder={t(`${scope}.searchPlaceholder`)}
           onChange={handleSearchChange}
         />
       </SidebarHeader>
 
       {isLoading && (
         <SidebarStatus>
-          <BaseSpinner size={18} label={t('sidebar.loading')} />
+          <BaseSpinner size={18} label={t(`${scope}.loading`)} />
         </SidebarStatus>
       )}
 
@@ -73,8 +114,8 @@ export function ChatSidebar({
         <SidebarStatus>
           <EmptyState
             icon="refresh"
-            title={t('sidebar.error.title')}
-            description={t('sidebar.error.description')}
+            title={t(`${scope}.error.title`)}
+            description={t(`${scope}.error.description`)}
             action={
               <BaseButton variant="secondary" size="sm" onClick={onRetry}>
                 {tCommon('actions.retry')}
@@ -84,25 +125,36 @@ export function ChatSidebar({
         </SidebarStatus>
       )}
 
-      {!isLoading && !hasError && !hasContacts && (
+      {!isLoading && !hasError && !hasEntries && (
         <SidebarStatus>
           <EmptyState
             icon={hasSearchTerm ? 'search' : 'userPlus'}
             title={
               hasSearchTerm
                 ? t('sidebar.noResults.title')
-                : t('sidebar.empty.title')
+                : t(`${scope}.empty.title`)
             }
             description={
               hasSearchTerm
                 ? t('sidebar.noResults.description')
-                : t('sidebar.empty.description')
+                : t(`${scope}.empty.description`)
+            }
+            action={
+              !hasSearchTerm && !isPicking ? (
+                <BaseButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={onStartPicking}
+                >
+                  {t('sidebar.contacts.title')}
+                </BaseButton>
+              ) : undefined
             }
           />
         </SidebarStatus>
       )}
 
-      {!isLoading && !hasError && hasContacts && (
+      {!isLoading && !hasError && hasEntries && (
         <ContactList>
           {filteredContacts.map((contact) => (
             <li key={contact.id}>
