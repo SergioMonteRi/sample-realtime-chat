@@ -4,8 +4,8 @@ import type { ChatMessage } from '../messages'
  * Contrato do canal em tempo real do backend (`backend/sockets/chat_socket.py`).
  *
  * As strings ficam aqui para que hooks e UI nunca as repitam soltas, e para
- * que ligar o Socket.IO seja trocar uma implementacao — nao cacar literais
- * espalhados pelo codigo.
+ * que trocar o transporte seja trocar uma implementacao — nao cacar
+ * literais espalhados pelo codigo.
  */
 export const CHAT_REALTIME_EVENTS = {
   joinChat: 'join-chat',

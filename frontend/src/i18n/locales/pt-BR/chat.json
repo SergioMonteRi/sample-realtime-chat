@@ -23,7 +23,7 @@
     "openLabel": "Abrir conversa com {{name}}",
     "loading": "Carregando mensagens",
     "refreshLabel": "Buscar mensagens novas",
-    "realtimeNotice": "Mensagens novas chegam ao atualizar — o tempo real entra em uma etapa seguinte.",
+    "realtimeNotice": "Mensagens novas chegam em tempo real, sem precisar atualizar.",
     "you": "Você",
     "day": {
       "today": "Hoje",

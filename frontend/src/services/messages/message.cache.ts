@@ -38,12 +38,16 @@ export const replaceMessage = (
     .sort(byChronology)
 
 /**
- * Porta de entrada de uma mensagem que a aplicacao nao pediu.
+ * Porta de entrada de uma mensagem que a aplicacao nao pediu — o evento
+ * `new-message` do canal (ver `use-chat-realtime`).
  *
- * Hoje so o `POST` passa por aqui. Quando o Socket.IO entrar, o handler do
- * evento `new-message` chama esta mesma funcao: a mensagem e escrita na
- * `queryKey` que a tela ja observa, e a origem do dado (HTTP ou canal)
- * continua invisivel para a UI. Ver `services/realtime`.
+ * A mensagem e escrita na `queryKey` que a tela ja observa, entao a origem
+ * do dado fica invisivel para a UI: o mesmo caminho de render serve para uma
+ * resposta HTTP e para um evento do socket.
+ *
+ * Quem envia tambem recebe o broadcast da propria mensagem. Se o `POST`
+ * ainda nao respondeu, e o balao otimista que e trocado aqui; se ja
+ * respondeu, `insertMessage` reconhece o id e nao duplica.
  */
 export const applyIncomingMessage = (
   queryClient: QueryClient,

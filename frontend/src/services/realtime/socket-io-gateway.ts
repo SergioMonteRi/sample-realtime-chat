@@ -4,8 +4,16 @@ import { ENV } from '@/config'
 
 import { messageSchema, toSentMessage } from '../messages'
 import type { RealtimeGateway, Unsubscribe } from './realtime.contract'
+import { CHAT_REALTIME_EVENTS } from './realtime.contract'
 
+/**
+ * O handshake precisa levar o cookie de sessao do flask-login: e por ele que
+ * o backend sabe quem esta entrando na sala (ver `sockets/chat_socket.py`).
+ * `autoConnect: false` deixa a conexao para o bootstrap, depois de o
+ * gateway estar instalado.
+ */
 const socket: Socket = io(ENV.socketUrl, {
+  path: ENV.socketPath,
   withCredentials: true,
   autoConnect: false,
 })
@@ -37,7 +45,7 @@ export const socketIoGateway: RealtimeGateway = {
   },
 
   joinChat(chatId: string) {
-    socket.emit('join-chat', {
+    socket.emit(CHAT_REALTIME_EVENTS.joinChat, {
       chat_id: chatId,
     })
   },
@@ -47,17 +55,17 @@ export const socketIoGateway: RealtimeGateway = {
       const message = messageSchema.safeParse(payload)
 
       if (!message.success) {
-        console.error('Invalid paylod received by Socket.IO', message.error)
+        console.error('Invalid payload received by Socket.IO', message.error)
         return
       }
 
       listener(toSentMessage(message.data))
     }
 
-    socket.on('new-message', handleNewMessage)
+    socket.on(CHAT_REALTIME_EVENTS.newMessage, handleNewMessage)
 
     return () => {
-      socket.off('new-message', handleNewMessage)
+      socket.off(CHAT_REALTIME_EVENTS.newMessage, handleNewMessage)
     }
   },
 }

@@ -16,10 +16,11 @@ export const APP = {
   chatResolutionStaleTimeMs: Infinity,
 
   /**
-   * O historico em cache nunca envelhece sozinho: enquanto nao ha canal em
-   * tempo real, so o botao de atualizar (um `refetch`, que ignora este
-   * valor) traz mensagem nova. A carga inicial continua acontecendo quando
-   * a conversa ainda nao esta em cache. Ver `services/realtime`.
+   * O historico em cache nunca envelhece sozinho porque nao precisa: quem
+   * traz mensagem nova e o canal, que escreve direto na query (ver
+   * `services/messages/message.cache.ts`). Sobram a carga inicial, quando a
+   * conversa ainda nao esta em cache, e o botao de atualizar — um `refetch`,
+   * que ignora este valor.
    */
   messagesStaleTimeMs: Infinity,
 } as const

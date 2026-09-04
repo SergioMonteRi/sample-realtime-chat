@@ -15,11 +15,12 @@ export const messageQueries = {
   /**
    * Historico da conversa.
    *
-   * Sem canal em tempo real, nada revalida sozinho: nem polling, nem foco da
-   * janela, nem reconexao de rede. A mensagem nova so aparece quando a pessoa
-   * pede, pelo botao de atualizar do cabecalho, ou ao abrir a conversa. Com
-   * duas abas lado a lado, o refetch no foco dava a ilusao de tempo real e
-   * escondia justamente o buraco que o Socket.IO vem preencher.
+   * Nada aqui revalida por conta propria: nem polling, nem foco da janela,
+   * nem reconexao de rede. Quem traz mensagem nova e o canal, que escreve
+   * nesta mesma queryKey (`applyIncomingMessage`) — um refetch periodico
+   * repetiria o trabalho do socket e, pior, disfarcaria uma queda dele.
+   * Sobram a carga inicial e o botao de atualizar do cabecalho, que e a rede
+   * de seguranca para quando o canal cai.
    */
   byChat: (chatId: string) =>
     queryOptions({
