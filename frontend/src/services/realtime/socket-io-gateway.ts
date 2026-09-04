@@ -25,7 +25,6 @@ socket.on('disconnect', (reason) => {
 
 export const socketIoGateway: RealtimeGateway = {
   connect() {
-    console.log('Tentando conectar ao Socket.IO...')
     socket.connect()
   },
 
@@ -34,7 +33,7 @@ export const socketIoGateway: RealtimeGateway = {
   },
 
   isConnected() {
-    return !!socket.connect
+    return socket.connected
   },
 
   joinChat(chatId: string) {
