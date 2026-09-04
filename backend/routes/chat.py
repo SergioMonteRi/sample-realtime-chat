@@ -84,10 +84,10 @@ def get_messages(chat_id: UUID):
             chat_id=chat_id,
             current_user_id=current_user.id
         )
-    except ValueError as e:
+    except NotChatParticipantError as e:
             return jsonify({
                 "error": str(e)
-            }), 400
+            }), 403
 
     response = GetMessagesResponse(
         messages=[

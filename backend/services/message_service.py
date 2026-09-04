@@ -71,7 +71,7 @@ class MessageService:
         chat = db.session.scalar(find_chat_stmt)
 
         if not chat:
-            raise ValueError(
+            raise NotChatParticipantError(
                 "User is not a participant of this chat"
             )
 
