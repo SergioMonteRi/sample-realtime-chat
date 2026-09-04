@@ -12,8 +12,15 @@ type ConversationPanelProps = {
 }
 
 export function ConversationPanel({ contact }: ConversationPanelProps) {
-  const { chatId, messages, isLoading, hasError, isRefreshing, handleRefresh } =
-    useConversationPanel({ contactId: contact.id })
+  const {
+    chatId,
+    currentUserId,
+    messages,
+    isLoading,
+    hasError,
+    isRefreshing,
+    handleRefresh,
+  } = useConversationPanel({ contactId: contact.id })
 
   return (
     <PanelWrapper>
@@ -25,14 +32,15 @@ export function ConversationPanel({ contact }: ConversationPanelProps) {
 
       <MessageList
         messages={messages}
-        peerId={contact.id}
+        chatId={chatId}
+        currentUserId={currentUserId}
         peerName={getDisplayNameFromEmail(contact.email)}
         isLoading={isLoading}
         hasError={hasError}
         onRetry={handleRefresh}
       />
 
-      <MessageComposer chatId={chatId} />
+      <MessageComposer chatId={chatId} senderId={currentUserId} />
     </PanelWrapper>
   )
 }

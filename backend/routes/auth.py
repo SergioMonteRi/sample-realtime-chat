@@ -1,7 +1,6 @@
 from sqlalchemy import select
 from flask import request, jsonify, Blueprint
-from flask_login import login_user, logout_user, login_required
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, logout_user, login_required, current_user
 
 from uuid import UUID
 from pydantic import ValidationError

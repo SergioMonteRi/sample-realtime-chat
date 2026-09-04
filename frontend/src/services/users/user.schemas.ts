@@ -20,3 +20,9 @@ export const userSchema = userApiSchema.transform((user) => ({
 export const getUsersResponseSchema = z.object({
   users: z.array(userSchema),
 })
+
+/**
+ * `GET /me` devolve o usuario autenticado na raiz da resposta — sem o
+ * envelope `{ users: [...] }` de `GET /users`.
+ */
+export const currentUserResponseSchema = userSchema

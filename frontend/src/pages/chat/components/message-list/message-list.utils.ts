@@ -21,26 +21,26 @@ export interface MessageDayGroup {
 /**
  * Quebra a conversa em blocos por dia e marca onde comeca cada sequencia.
  *
- * O lado vem de `isOutgoingMessage` — e nao do `senderId` — porque a
- * mensagem otimista ainda nao tem o id real do remetente; comparar o lado
- * mantem a sequencia continua enquanto o servidor nao responde.
+ * O lado sai de `isOutgoingMessage`, que compara o remetente com quem esta
+ * logado. A mensagem otimista ja nasce com o `senderId` real, entao a
+ * sequencia continua inteira enquanto o servidor nao responde.
  */
 export const groupMessagesByDay = (
   messages: ChatMessage[],
-  peerId: string,
+  currentUserId: string,
 ): MessageDayGroup[] => {
   const groups: MessageDayGroup[] = []
 
   messages.forEach((message, index) => {
     const dayKey = getDayKey(message.createdAt)
-    const isOutgoing = isOutgoingMessage(message, peerId)
+    const isOutgoing = isOutgoingMessage(message, currentUserId)
 
     const previousMessage = messages[index - 1]
     const previousGroup = groups.at(-1)
 
     const isSequenceStart =
       !previousMessage ||
-      isOutgoingMessage(previousMessage, peerId) !== isOutgoing ||
+      isOutgoingMessage(previousMessage, currentUserId) !== isOutgoing ||
       getDayKey(previousMessage.createdAt) !== dayKey
 
     const item: MessageListItem = { message, isOutgoing, isSequenceStart }

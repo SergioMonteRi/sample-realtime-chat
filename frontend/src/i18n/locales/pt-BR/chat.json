@@ -57,6 +57,7 @@
   },
   "errors": {
     "contactsFailed": "Não foi possível carregar os contatos.",
+    "identityFailed": "Não foi possível identificar a sua sessão.",
     "messagesFailed": "Não foi possível carregar as mensagens.",
     "openConversationFailed": "Não foi possível abrir a conversa.",
     "sendMessageFailed": "Não foi possível enviar a mensagem."

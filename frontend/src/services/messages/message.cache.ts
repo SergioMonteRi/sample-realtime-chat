@@ -2,11 +2,7 @@ import type { QueryClient } from '@tanstack/react-query'
 
 import { messageQueries } from './message.queries'
 import type { ChatMessage } from './message.types'
-import {
-  isOptimisticMessage,
-  OUTGOING_SENDER_ID,
-  toSentMessage,
-} from './message.utils'
+import { isOptimisticMessage, toSentMessage } from './message.utils'
 
 /**
  * Datas vem em formatos diferentes (o backend serializa com microssegundos,
@@ -61,7 +57,7 @@ export const applyIncomingMessage = (
     const optimisticMessage = messages.find(
       (current) =>
         isOptimisticMessage(current) &&
-        current.senderId === OUTGOING_SENDER_ID &&
+        current.senderId === message.senderId &&
         current.content === message.content,
     )
 

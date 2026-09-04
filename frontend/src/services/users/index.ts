@@ -1,3 +1,4 @@
+export * from './use-current-user-query'
 export * from './use-users-query'
 export * from './user.queries'
 export * from './user.schemas'

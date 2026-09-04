@@ -25,3 +25,12 @@ def get_users():
     )
 
     return jsonify(response.model_dump(mode="json"))
+
+@user.route("/me", methods=["GET"])
+@login_required
+def get_current_user():
+    response = UserResponse.model_validate(current_user)
+
+    return jsonify(
+        response.model_dump(mode="json")
+    ), 200

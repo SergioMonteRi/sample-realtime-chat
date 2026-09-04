@@ -19,7 +19,8 @@ import { useMessageList } from './use-message-list'
 
 type MessageListProps = {
   messages: ChatMessage[]
-  peerId: string
+  chatId: string | undefined
+  currentUserId: string | undefined
   peerName: string
   isLoading: boolean
   hasError: boolean
@@ -28,7 +29,8 @@ type MessageListProps = {
 
 export function MessageList({
   messages,
-  peerId,
+  chatId,
+  currentUserId,
   peerName,
   isLoading,
   hasError,
@@ -37,7 +39,11 @@ export function MessageList({
   const { t, i18n } = useTranslation('chat')
   const { t: tCommon } = useTranslation('common')
 
-  const { groups, bottomRef } = useMessageList({ messages, peerId })
+  const { groups, bottomRef } = useMessageList({
+    messages,
+    chatId,
+    currentUserId,
+  })
 
   const locale = i18n.resolvedLanguage ?? i18n.language
 
@@ -48,7 +54,7 @@ export function MessageList({
     return formatDayDate(group.isoDate, locale)
   }
 
-  if (isLoading) {
+  if (isLoading || !currentUserId) {
     return (
       <ListStatus>
         <BaseSpinner size={18} label={t('conversation.loading')} />

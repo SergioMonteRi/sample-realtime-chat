@@ -8,7 +8,10 @@ import { groupMessagesByDay } from './message-list.utils'
 
 interface UseMessageListParams {
   messages: ChatMessage[]
-  peerId: string
+  /** Ausente enquanto o `POST /chat` resolve a conversa. */
+  chatId: string | undefined
+  /** Ausente enquanto `GET /me` nao respondeu. */
+  currentUserId: string | undefined
 }
 
 interface UseMessageListReturn {
@@ -18,23 +21,26 @@ interface UseMessageListReturn {
 
 export const useMessageList = ({
   messages,
-  peerId,
+  chatId,
+  currentUserId,
 }: UseMessageListParams): UseMessageListReturn => {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const lastMessageId = messages.at(-1)?.id
 
   /**
-   * Toda conversa abre no fim e acompanha a mensagem nova. A dependencia e o
-   * id da ultima mensagem: reordenar ou trocar a otimista pela definitiva
-   * tambem rola, mas um refetch que devolve a mesma lista nao mexe na tela.
+   * Toda conversa abre no fim e acompanha a mensagem nova. As dependencias
+   * sao a ultima mensagem e a conversa aberta: reordenar ou trocar a
+   * otimista pela definitiva tambem rola, mas um refetch que devolve a mesma
+   * lista nao mexe na tela.
    */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'end' })
-  }, [lastMessageId, peerId])
+  }, [lastMessageId, chatId])
 
   return {
-    groups: groupMessagesByDay(messages, peerId),
+    /* Sem identidade nao ha lado; a lista nem chega a ser renderizada. */
+    groups: currentUserId ? groupMessagesByDay(messages, currentUserId) : [],
     bottomRef,
   }
 }

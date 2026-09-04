@@ -16,9 +16,14 @@ const COMPOSER_MAX_ROWS = 6
 interface UseMessageComposerParams {
   /** Ausente enquanto o `POST /chat` ainda esta resolvendo a conversa. */
   chatId: string | undefined
+  /** Ausente enquanto `GET /me` nao respondeu: e o remetente do balao otimista. */
+  senderId: string | undefined
 }
 
-export const useMessageComposer = ({ chatId }: UseMessageComposerParams) => {
+export const useMessageComposer = ({
+  chatId,
+  senderId,
+}: UseMessageComposerParams) => {
   const { t } = useTranslation('chat')
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -32,6 +37,7 @@ export const useMessageComposer = ({ chatId }: UseMessageComposerParams) => {
 
   const { mutate: sendMessage, isPending } = useSendMessageMutation({
     chatId: chatId ?? '',
+    senderId: senderId ?? '',
   })
 
   const { ref: registerRef, ...contentField } = register('content')
@@ -56,7 +62,7 @@ export const useMessageComposer = ({ chatId }: UseMessageComposerParams) => {
   }
 
   const handleSend = ({ content: draft }: MessageComposerFormData) => {
-    if (!chatId) return
+    if (!chatId || !senderId) return
 
     /* O campo esvazia na hora; o balao otimista assume o lugar do texto. */
     setDraft('')
@@ -84,9 +90,9 @@ export const useMessageComposer = ({ chatId }: UseMessageComposerParams) => {
     errorMessage: errorKey
       ? t(errorKey, { count: APP.messageMaxLength })
       : undefined,
-    isDisabled: !chatId,
+    isDisabled: !chatId || !senderId,
     isSending: isPending,
-    canSend: Boolean(chatId) && content.trim().length > 0,
+    canSend: Boolean(chatId && senderId) && content.trim().length > 0,
     handleSubmitForm,
     handleKeyDown,
   }

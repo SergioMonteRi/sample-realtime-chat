@@ -14,7 +14,7 @@ export const messageMutations = {
    * volta — o id definitivo vem de la. Se falhar, a lista retorna ao estado
    * anterior e o texto e devolvido ao campo (ver `use-message-composer`).
    */
-  send: (queryClient: QueryClient, chatId: string) => {
+  send: (queryClient: QueryClient, chatId: string, senderId: string) => {
     const { queryKey } = messageQueries.byChat(chatId)
 
     return mutationOptions({
@@ -28,6 +28,7 @@ export const messageMutations = {
         const previousMessages = queryClient.getQueryData(queryKey)
         const optimisticMessage = createOptimisticMessage({
           chatId,
+          senderId,
           content: payload.content,
         })
 

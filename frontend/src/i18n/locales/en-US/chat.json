@@ -57,6 +57,7 @@
   },
   "errors": {
     "contactsFailed": "Could not load the contacts.",
+    "identityFailed": "Could not identify your session.",
     "messagesFailed": "Could not load the messages.",
     "openConversationFailed": "Could not open the conversation.",
     "sendMessageFailed": "Could not send the message."
