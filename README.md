@@ -829,7 +829,7 @@ npm run format:check  # prettier, no writes
 npm run type-check    # tsc, no emit
 ```
 
-## Roadmap
+## Next steps
 
 - [ ] A room per user (`user:<id>`), so a brand-new conversation and activity in a conversation
       you do not have open reach the sidebar over the channel instead of on the next `GET /chats`
