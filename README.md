@@ -831,22 +831,6 @@ npm run type-check    # tsc, no emit
 
 ## Roadmap
 
-- [x] `User`, `Chat`, `ChatParticipant` and `Message` modeling, with UUIDv7 and UTC column types
-- [x] Alembic migrations instead of `create_all()`
-- [x] Session authentication with flask-login, hashed passwords
-- [x] Idempotent chat creation, message history
-- [x] React front end: login, register, contacts, conversation, optimistic send
-- [x] Socket.IO channel with one room per conversation
-- [x] Messages pushed on `new-message` and merged into the query cache
-- [x] Require authentication on the socket `connect` handler
-- [x] `GET /me`, so the client stops inferring its own identity by elimination
-- [x] `GET /chats`, so the conversation list stops being the user list — and so opening a
-      conversation stops creating one
-- [x] Last message and last activity on the chat row, with the sidebar reordering in the cache
-- [x] Return `403` when the caller is not a participant of a chat (on `POST .../messages`)
-- [x] Scroll only the conversation, keeping the header and the sidebar fixed
-- [ ] Return `403` on `GET /chat/<id>/messages` too — `MessageService.get_messages` still raises
-      a bare `ValueError`, which the route maps to `400`
 - [ ] A room per user (`user:<id>`), so a brand-new conversation and activity in a conversation
       you do not have open reach the sidebar over the channel instead of on the next `GET /chats`
 - [ ] Leave the room when the conversation closes: `join-chat` has no counterpart, so a socket
@@ -856,11 +840,8 @@ npm run type-check    # tsc, no emit
       `ChatService` are the layers worth covering first
 - [ ] Pagination for the message history
 - [ ] Read the allowed origins from the environment instead of hardcoding `localhost:5173`
-- [ ] Drop the debug `console.log`s from `socket-io-gateway.ts`
 - [ ] Move the `GET /chats` contracts out of `schemas/chat/create_chat_request.py` — the file
       outgrew its name
-- [ ] Refresh the comment in `services/auth/auth.schemas.ts`: it still says the backend does not
-      expose the authenticated user
 
 ## License
 
