@@ -13,6 +13,7 @@ export const SidebarWrapper = styled.aside`
 export const SidebarHeader = styled.div`
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   gap: ${({ theme }) => theme.spacing.sm};
   padding: ${({ theme }) => `${theme.spacing.md} ${theme.spacing.md}`};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};

@@ -2,11 +2,21 @@ import styled from 'styled-components'
 
 import { fadeIn, microLabel, truncate } from '@/styles'
 
+/**
+ * A unica altura definida da arvore, e o que faz o resto funcionar: sem uma
+ * caixa fechada aqui, o `flex: 1` + `overflow-y: auto` da lista de mensagens
+ * resolve contra a altura do conteudo, nunca recorta, e quem rola passa a ser
+ * a pagina inteira — levando cabecalho e barra lateral com ela.
+ *
+ * `dvh` e nao `vh` para acompanhar a barra de endereco no mobile. Sem
+ * `flex: 1`: num item de flex column o `flex-basis` manda no tamanho
+ * principal e o `height` seria ignorado.
+ */
 export const ShellWrapper = styled.div`
   display: flex;
-  flex: 1;
   flex-direction: column;
-  min-height: 0;
+  height: 100dvh;
+  overflow: hidden;
 `
 
 export const ShellHeader = styled.header`

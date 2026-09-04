@@ -6,9 +6,13 @@ export const ChatLayout = styled.div`
       0,
       1fr
     );
+  /* Uma linha, limitada a altura disponivel: uma linha "auto" deixaria o
+     conteudo esticar a grade e o recorte escaparia para a pagina. */
+  grid-template-rows: minmax(0, 1fr);
   flex: 1;
   min-height: 0;
   width: 100%;
+  overflow: hidden;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.workspace}) {
     grid-template-columns: minmax(0, 1fr);
