@@ -6,12 +6,6 @@ import { messageSchema, toSentMessage } from '../messages'
 import type { RealtimeGateway, Unsubscribe } from './realtime.contract'
 import { CHAT_REALTIME_EVENTS } from './realtime.contract'
 
-/**
- * O handshake precisa levar o cookie de sessao do flask-login: e por ele que
- * o backend sabe quem esta entrando na sala (ver `sockets/chat_socket.py`).
- * `autoConnect: false` deixa a conexao para o bootstrap, depois de o
- * gateway estar instalado.
- */
 const socket: Socket = io(ENV.socketUrl, {
   path: ENV.socketPath,
   withCredentials: true,
@@ -19,16 +13,15 @@ const socket: Socket = io(ENV.socketUrl, {
 })
 
 socket.on('connect', () => {
-  console.log('Socket conectado!')
   console.log('Socket ID:', socket.id)
 })
 
 socket.on('connect_error', (error) => {
-  console.error('Erro ao conectar no Socket.IO:', error)
+  console.error('Error to connet on Socket.IO:', error)
 })
 
 socket.on('disconnect', (reason) => {
-  console.log('Socket desconectado:', reason)
+  console.log('Socket desconnected:', reason)
 })
 
 export const socketIoGateway: RealtimeGateway = {
