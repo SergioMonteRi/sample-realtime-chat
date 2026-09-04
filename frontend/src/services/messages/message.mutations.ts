@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query'
 import { mutationOptions } from '@tanstack/react-query'
 
+import { applyChatActivity } from '../chats/chat.cache'
 import { insertMessage, settleMessage } from './message.cache'
 import { messageKeys, messageQueries } from './message.queries'
 import { messageService } from './message.service'
@@ -49,6 +50,9 @@ export const messageMutations = {
             toSentMessage(message),
           ),
         )
+
+        /* O broadcast faria o mesmo, mas nao ha por que depender do canal. */
+        applyChatActivity(queryClient, message)
       },
 
       onError: (_error, variables, context) => {

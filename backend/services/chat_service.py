@@ -90,11 +90,12 @@ class ChatService():
             )
             .options(
                 selectinload(Chat.participants)
-                .selectinload(ChatParticipant.user)
+                .selectinload(ChatParticipant.user),
+                selectinload(Chat.last_message)
             )
             .order_by(
-                Chat.last_message_at.desc().nullslast(),
-                Chat.created_at.desc()      
+                Chat.last_message_at.desc(),
+                Chat.created_at.desc()
             )
         )
 

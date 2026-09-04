@@ -28,7 +28,17 @@ export const ContactButton = styled.button<{ $isActive: boolean }>`
 export const ContactCopy = styled.span`
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-width: 0;
+`
+
+/* Nunca encolhe: o nome e o e-mail truncam antes da hora desaparecer. */
+export const ContactMeta = styled.span`
+  flex-shrink: 0;
+  font-family: ${({ theme }) => theme.fonts.mono};
+  font-size: ${({ theme }) => theme.fontSizes.micro};
+  color: ${({ theme }) => theme.colors.textFaint};
+  font-variant-numeric: tabular-nums;
 `
 
 export const ContactName = styled.span`
@@ -37,6 +47,17 @@ export const ContactName = styled.span`
   font-weight: 600;
   letter-spacing: -0.005em;
   color: ${({ theme }) => theme.colors.text};
+`
+
+/**
+ * Uma linha so: a mensagem pode ter quebras e milhares de caracteres, e a
+ * previa nao pode empurrar a linha da barra lateral. O `nowrap` do
+ * `truncate` colapsa o `\n` em espaco, que e o que se quer aqui.
+ */
+export const ContactPreview = styled.span`
+  ${truncate};
+  font-size: ${({ theme }) => theme.fontSizes.xs};
+  color: ${({ theme }) => theme.colors.textMuted};
 `
 
 export const ContactEmail = styled.span`

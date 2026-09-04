@@ -1,3 +1,4 @@
+export * from './chat.cache'
 export * from './chat.mutations'
 export * from './chat.queries'
 export * from './chat.schemas'

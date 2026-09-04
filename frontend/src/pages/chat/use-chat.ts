@@ -4,7 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { buildConversationRoute } from '@/constants'
 import type { ChatParticipant } from '@/services/chats'
 import { useChatsQuery } from '@/services/chats'
-import { useUsersQuery } from '@/services/users'
+import { isOutgoingMessage } from '@/services/messages'
+import { useCurrentUserQuery, useUsersQuery } from '@/services/users'
 
 /**
  * A barra lateral tem dois modos sobre a mesma linha visual: as conversas
@@ -13,9 +14,17 @@ import { useUsersQuery } from '@/services/users'
  */
 export type SidebarMode = 'conversations' | 'contacts'
 
+export interface SidebarEntry {
+  contact: ChatParticipant
+  /** Quando a conversa se moveu por ultimo; nulo num contato sem conversa. */
+  lastMessageAt: string | null
+  /** Previa da ultima mensagem; nula num contato sem conversa. */
+  preview: { content: string; isOutgoing: boolean } | null
+}
+
 interface UseChatReturn {
   mode: SidebarMode
-  entries: ChatParticipant[]
+  entries: SidebarEntry[]
   totalConversations: number
   selectedContactId: string | undefined
   selectedPeer: ChatParticipant | undefined
@@ -37,6 +46,12 @@ export const useChat = (): UseChatReturn => {
 
   const chatsQuery = useChatsQuery()
   const chats = chatsQuery.data ?? []
+
+  /**
+   * Identidade so para decidir o "Voce:" da previa. Ja esta em cache (o
+   * painel da conversa a pede tambem), entao nao custa requisicao.
+   */
+  const currentUserId = useCurrentUserQuery().data?.id
 
   const conversationPeer = chats.find(
     (chat) => chat.participant.id === userId,
@@ -65,8 +80,26 @@ export const useChat = (): UseChatReturn => {
   return {
     mode: isPicking ? 'contacts' : 'conversations',
     entries: isPicking
-      ? contacts.filter((contact) => !conversationPeerIds.has(contact.id))
-      : chats.map((chat) => chat.participant),
+      ? contacts
+          .filter((contact) => !conversationPeerIds.has(contact.id))
+          .map((contact) => ({
+            contact,
+            lastMessageAt: null,
+            preview: null,
+          }))
+      : chats.map((chat) => ({
+          contact: chat.participant,
+          lastMessageAt: chat.lastMessageAt,
+          preview: chat.lastMessage
+            ? {
+                content: chat.lastMessage.content,
+                /* Mesma regra do balao: compara o remetente com o `/me`. */
+                isOutgoing:
+                  currentUserId !== undefined &&
+                  isOutgoingMessage(chat.lastMessage, currentUserId),
+              }
+            : null,
+        })),
     totalConversations: chats.length,
     selectedContactId: userId,
     /**

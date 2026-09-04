@@ -1,14 +1,14 @@
-import type { ChatParticipant } from '@/services/chats'
 import { getDisplayNameFromEmail } from '@/utils'
+
+import type { SidebarEntry } from '../../use-chat'
 
 /** A busca cobre o e-mail e o nome derivado dele, ambos em caixa baixa. */
 export const matchesSearchTerm = (
-  contact: ChatParticipant,
+  entry: SidebarEntry,
   term: string,
 ): boolean => {
-  const displayName = getDisplayNameFromEmail(contact.email).toLowerCase()
+  const { email } = entry.contact
+  const displayName = getDisplayNameFromEmail(email).toLowerCase()
 
-  return (
-    contact.email.toLowerCase().includes(term) || displayName.includes(term)
-  )
+  return email.toLowerCase().includes(term) || displayName.includes(term)
 }

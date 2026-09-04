@@ -1,22 +1,21 @@
 import { useState } from 'react'
 
-import type { ChatParticipant } from '@/services/chats'
-
+import type { SidebarEntry } from '../../use-chat'
 import { matchesSearchTerm } from './chat-sidebar.utils'
 
 interface UseChatSidebarParams {
-  contacts: ChatParticipant[]
+  entries: SidebarEntry[]
 }
 
 interface UseChatSidebarReturn {
   searchTerm: string
-  filteredContacts: ChatParticipant[]
+  filteredEntries: SidebarEntry[]
   hasSearchTerm: boolean
   handleSearchChange: (term: string) => void
 }
 
 export const useChatSidebar = ({
-  contacts,
+  entries,
 }: UseChatSidebarParams): UseChatSidebarReturn => {
   /* Estado de interface, e nao de servidor: `useState` e o lugar certo. */
   const [searchTerm, setSearchTerm] = useState('')
@@ -25,9 +24,9 @@ export const useChatSidebar = ({
 
   return {
     searchTerm,
-    filteredContacts: normalizedTerm
-      ? contacts.filter((contact) => matchesSearchTerm(contact, normalizedTerm))
-      : contacts,
+    filteredEntries: normalizedTerm
+      ? entries.filter((entry) => matchesSearchTerm(entry, normalizedTerm))
+      : entries,
     hasSearchTerm: normalizedTerm.length > 0,
     handleSearchChange: setSearchTerm,
   }

@@ -44,9 +44,12 @@ class MessageService:
             created_at=now
         )
 
-        chat.last_message_at = now
-
         db.session.add(new_message)
+        db.session.flush()
+
+        chat.last_message_at = now
+        chat.last_message_id = new_message.id
+
         db.session.commit()
 
         return new_message

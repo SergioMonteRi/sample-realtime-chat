@@ -59,6 +59,16 @@ export const formatDayDate = (
   }).format(date)
 }
 
+/** Data compacta ("03/09"), para caber na linha da barra lateral. */
+export const formatShortDate = (
+  isoDate: string,
+  locale: string = APP.defaultLocale,
+): string =>
+  new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: '2-digit',
+  }).format(new Date(isoDate))
+
 export const formatDateTime = (
   isoDate: string,
   locale: string = APP.defaultLocale,

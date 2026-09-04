@@ -2,6 +2,9 @@
   "sidebar": {
     "newChatLabel": "Start a new conversation",
     "backLabel": "Back to the conversations",
+    "preview": {
+      "outgoing": "You: {{content}}"
+    },
     "noResults": {
       "title": "Nothing found",
       "description": "Try another part of the e-mail."

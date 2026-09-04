@@ -42,7 +42,8 @@ class Message(Base):
     )
 
     chat: Mapped["Chat"] = relationship(
-        back_populates="messages"
+        back_populates="messages",
+        foreign_keys=[chat_id]
     )
 
     sender: Mapped["User"] = relationship(

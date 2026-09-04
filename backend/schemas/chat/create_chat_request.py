@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, ConfigDict
 
+from schemas.message.message_schemas import MessageResponse
+
 class ChatParticipantResponse(BaseModel):
     id: UUID
     email: EmailStr
@@ -13,6 +15,8 @@ class ChatResponse(BaseModel):
     id: UUID
     participant: ChatParticipantResponse
     created_at: datetime
+    last_message_at: datetime | None = None
+    last_message: MessageResponse | None
 
 class CreateChatRequest(BaseModel):
     receiver_id: UUID

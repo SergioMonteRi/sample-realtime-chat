@@ -108,6 +108,12 @@ def get_chats():
             ChatResponse(
                 id=chat.id,
                 created_at=chat.created_at,
+                last_message_at=chat.last_message_at,
+                last_message=(
+                    MessageResponse.model_validate(chat.last_message)
+                    if chat.last_message
+                    else None
+                ),
                 participant=ChatParticipantResponse(
                     id=participant.user.id,
                     email=participant.user.email

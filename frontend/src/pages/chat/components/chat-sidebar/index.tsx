@@ -2,10 +2,9 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseButton, BaseIcon, BaseSpinner } from '@/components/atoms'
 import { EmptyState, SearchField } from '@/components/molecules'
-import type { ChatParticipant } from '@/services/chats'
 import { getDisplayNameFromEmail } from '@/utils'
 
-import type { SidebarMode } from '../../use-chat'
+import type { SidebarEntry, SidebarMode } from '../../use-chat'
 import { ContactItem } from '../contact-item'
 import {
   ContactList,
@@ -20,7 +19,7 @@ import { useChatSidebar } from './use-chat-sidebar'
 
 type ChatSidebarProps = {
   mode: SidebarMode
-  entries: ChatParticipant[]
+  entries: SidebarEntry[]
   totalConversations: number
   selectedContactId: string | undefined
   isLoading: boolean
@@ -46,8 +45,8 @@ export function ChatSidebar({
   const { t } = useTranslation('chat')
   const { t: tCommon } = useTranslation('common')
 
-  const { searchTerm, filteredContacts, hasSearchTerm, handleSearchChange } =
-    useChatSidebar({ contacts: entries })
+  const { searchTerm, filteredEntries, hasSearchTerm, handleSearchChange } =
+    useChatSidebar({ entries })
 
   const isPicking = mode === 'contacts'
 
@@ -57,7 +56,7 @@ export function ChatSidebar({
    */
   const scope = isPicking ? 'sidebar.contacts' : 'sidebar.conversations'
 
-  const hasEntries = filteredContacts.length > 0
+  const hasEntries = filteredEntries.length > 0
 
   return (
     <SidebarWrapper>
@@ -156,10 +155,12 @@ export function ChatSidebar({
 
       {!isLoading && !hasError && hasEntries && (
         <ContactList>
-          {filteredContacts.map((contact) => (
+          {filteredEntries.map(({ contact, lastMessageAt, preview }) => (
             <li key={contact.id}>
               <ContactItem
                 contact={contact}
+                lastMessageAt={lastMessageAt}
+                preview={preview}
                 isActive={contact.id === selectedContactId}
                 label={t('conversation.openLabel', {
                   name: getDisplayNameFromEmail(contact.email),
