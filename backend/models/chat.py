@@ -22,6 +22,12 @@ class Chat(Base):
         default=lambda: datetime.now(timezone.utc)
     )
 
+    last_message_at: Mapped[datetime | None] = mapped_column(
+        UTCDateTime(),
+        nullable=True,
+        index=True,
+    )
+
     participants: Mapped[list["ChatParticipant"]] = relationship(
         back_populates="chat"
     )

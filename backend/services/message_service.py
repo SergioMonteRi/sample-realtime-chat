@@ -1,5 +1,6 @@
 from uuid import UUID
 from sqlalchemy import select
+from datetime import datetime, timezone
 
 from extensions import db
 
@@ -34,11 +35,16 @@ class MessageService:
                 "User is not a participant of this chat"
             )
 
+        now = datetime.now(timezone.utc)
+
         new_message = Message(
             chat_id=chat_id,
             sender_id=sender_id,
-            content=content
+            content=content,
+            created_at=now
         )
+
+        chat.last_message_at = now
 
         db.session.add(new_message)
         db.session.commit()

@@ -92,7 +92,10 @@ class ChatService():
                 selectinload(Chat.participants)
                 .selectinload(ChatParticipant.user)
             )
-            .order_by(Chat.created_at.desc())
+            .order_by(
+                Chat.last_message_at.desc().nullslast(),
+                Chat.created_at.desc()      
+            )
         )
 
         return list(db.session.scalars(stmt).all())
