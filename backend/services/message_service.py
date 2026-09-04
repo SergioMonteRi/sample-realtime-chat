@@ -78,7 +78,7 @@ class MessageService:
 
         messages = db.session.scalars(get_messages_stmt).all()
 
-        return messages
+        return list(messages)
 
 
     
