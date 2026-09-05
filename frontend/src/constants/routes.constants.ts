@@ -1,9 +1,9 @@
 export const ROUTES = {
   root: '/',
-  login: '/entrar',
-  register: '/cadastro',
-  conversations: '/conversas',
-  conversationWithUser: '/conversas/:userId',
+  login: '/login',
+  register: '/register',
+  conversations: '/conversations',
+  conversationWithUser: '/conversations/:userId',
   notFound: '*',
 } as const
 

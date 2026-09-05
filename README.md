@@ -238,8 +238,9 @@ conversation exists because someone spoke.
 
 **The route carries the contact id, not the chat id.** The contact exists as soon as the
 conversation list (or `GET /users`) answers; the chat may not exist at all. Addressing the
-screen by the contact keeps `/conversas/:userId` valid before the first message is ever sent —
-and still valid afterwards, because `GET /chats` returns the participant next to each chat.
+screen by the contact keeps the browser route `/conversations/:userId` valid before the first
+message is ever sent — and still valid afterwards, because `GET /chats` returns the participant
+next to each chat.
 
 **The last message lives on the chat row.** `chat.last_message_at` and `chat.last_message_id`
 are written by `MessageService.create_message` in the same commit as the message itself, so the
@@ -259,8 +260,9 @@ conversation that is not in the list yet, there is nothing to patch — the part
 **One list, two modes.** The sidebar renders conversations by default and contacts when you ask
 to start a new one; both use the same row component, so the difference is copy, not markup.
 `GET /users` is no longer the conversation list, so it is fetched lazily: only when picking
-someone, or when a `/conversas/:userId` link names a contact you have no conversation with and
-the screen needs a name to show. People you already talk to are filtered out of the picker.
+someone, or when the browser route `/conversations/:userId` names a contact you have no
+conversation with and the screen needs a name to show. People you already talk to are filtered
+out of the picker.
 
 **Identity is a query; the displayed email is still local.** `GET /me` returns the authenticated
 user, and `userQueries.me` caches it with `staleTime: Infinity` — the identity cannot change
@@ -768,9 +770,10 @@ sidebar. Both surface on the next `GET /chats` instead.
 
 ## Front end
 
-Four screens: login, register, the chat itself, and a not-found page. The chat is a two-column
-layout that collapses to one column on narrow viewports, with the conversation replacing the
-contact list.
+Four screens: login (`/login`), register (`/register`), the chat itself (`/conversations` and
+`/conversations/:userId`), and a not-found page. Those paths are browser routes, served by React
+Router — none of them is an API endpoint. The chat is a two-column layout that collapses to one
+column on narrow viewports, with the conversation replacing the contact list.
 
 **Conversations** — `GET /chats` is the sidebar and the source of every `chat_id`. Each row
 already carries the other participant and the last message, so the list renders from one
@@ -779,14 +782,15 @@ says "yesterday", anything older is a short date — the row is narrow, and the 
 conversation from three weeks ago is not interesting.
 
 **Contacts** — `GET /users`, fetched only when needed: when picking someone to start a
-conversation with, or when a `/conversas/:userId` link names a contact you have no conversation
-with. Filtering is client-side, over the email and the name derived from it.
+conversation with, or when the browser route `/conversations/:userId` names a contact you have
+no conversation with. Filtering is client-side, over the email and the name derived from it.
 
-**Conversation** (`/conversas/:userId`) — three reads and no write: the identity (`GET /me`), the
-conversation list where the `chatId` lives, and the history, which turns on once there is a
-`chatId` to ask about. `enabled` does the orchestration; there is no `useEffect` coordinating
-them. When the conversation does not exist yet, `chatId` is `undefined`, the history never
-fires, and the composer is still usable — the first send creates the chat and posts into it.
+**Conversation** (browser route `/conversations/:userId`) — three reads and no write: the
+identity (`GET /me`), the conversation list where the `chatId` lives, and the history, which
+turns on once there is a `chatId` to ask about. `enabled` does the orchestration; there is no
+`useEffect` coordinating them. When the conversation does not exist yet, `chatId` is
+`undefined`, the history never fires, and the composer is still usable — the first send creates
+the chat and posts into it.
 
 Three decisions worth calling out:
 

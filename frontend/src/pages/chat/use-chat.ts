@@ -60,7 +60,7 @@ export const useChat = (): UseChatReturn => {
   /**
    * A agenda inteira (`GET /users`) so e buscada quando faz falta: para
    * escolher com quem comecar, ou para dar nome a um contato que ainda nao
-   * tem conversa — o caso de abrir `/conversas/:userId` direto pela URL.
+   * tem conversa — o caso de abrir `/conversations/:userId` direto pela URL.
    */
   const needsContacts =
     isPicking || (Boolean(userId) && chatsQuery.isSuccess && !conversationPeer)
